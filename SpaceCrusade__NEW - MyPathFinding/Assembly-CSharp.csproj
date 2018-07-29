@@ -88,10 +88,10 @@
      <Compile Include="Assets\Scripts\PlayerData\PlayerData_01.cs" />
      <Compile Include="Assets\Scripts\PlayerData\PlayerData_02.cs" />
  <Reference Include="UnityEditor.StandardEvents">
- <HintPath>D:/Made Games/SpaceCrusade__NEW - MyPathFinding/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
+ <HintPath>D:/Made Games/MultiplayerGIT/SpaceCrusade__NEW - MyPathFinding/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
  </Reference>
  <Reference Include="Unity.PackageManagerUI.Editor">
- <HintPath>D:/Made Games/SpaceCrusade__NEW - MyPathFinding/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+ <HintPath>D:/Made Games/MultiplayerGIT/SpaceCrusade__NEW - MyPathFinding/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.AIModule">
  <HintPath>D:/Made Games/Unity/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
