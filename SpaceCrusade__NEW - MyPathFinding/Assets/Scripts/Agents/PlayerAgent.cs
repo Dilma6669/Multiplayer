@@ -80,9 +80,11 @@ public class PlayerAgent : NetworkBehaviour {
         transform.SetParent (_playerManager.transform);
 		_uiManager.GetComponent<Canvas>().enabled = true;
 
-        _syncedVars.CmdTellServerToUpdatePlayerCount();
         _seed = _syncedVars.GlobalSeed;
         seedNumText.text = _seed.ToString();
+        Random.InitState(_seed);
+
+        _syncedVars.CmdTellServerToUpdatePlayerCount();
 
         if (isLocalPlayer)
         {
@@ -104,6 +106,9 @@ public class PlayerAgent : NetworkBehaviour {
     void ContinuePlayerSetUp()
 	{
 	    _cameraAgent.SetUpCameraAndLayers (_playerUniqueID);
-	}
+
+        _locationManager.BuildMapForClient();
+
+    }
 	
 }

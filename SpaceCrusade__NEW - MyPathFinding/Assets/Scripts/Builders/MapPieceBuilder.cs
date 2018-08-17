@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class MapPieceBuilder: NetworkBehaviour {
 
-	private static MapPieceBuilder instance = null;
-
 	LocationManager _locationManager;
 	CubeBuilder _cubeBuilder;
 	MapSettings _mapSettings;
@@ -19,12 +17,6 @@ public class MapPieceBuilder: NetworkBehaviour {
 
 
 	void Awake() {
-		if (instance == null)
-			instance = this;
-		else if (instance != this) {
-			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-			Destroy (gameObject);
-		}
 
 		_locationManager = transform.parent.GetComponent<LocationManager> ();
 		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
@@ -37,15 +29,14 @@ public class MapPieceBuilder: NetworkBehaviour {
 	}
 
 
-	public void AttachMapPieceToMapNode(int[] mapRules) {
+	public void AttachMapPieceToMapNode(List<Vector3> nodes) {
 
-		StartCoroutine (BuildMapsByIEnum (mapRules, 0.001f));
+		StartCoroutine (BuildMapsByIEnum (nodes, 0.001f));
 	}
 		
 
-	private IEnumerator BuildMapsByIEnum(int[] mapRules, float waitTime) {
+	private IEnumerator BuildMapsByIEnum(List<Vector3> nodes, float waitTime) {
 
-		Vector3 cubeLoc;
 		Vector3 GridLoc;
 
 		List<int[,]> layers = new List<int[,]>();
@@ -55,27 +46,27 @@ public class MapPieceBuilder: NetworkBehaviour {
 		int nodeCount = 0;
 		int layerCount = -1;
 
-		int multiplier = 6;
-		int i = 0;
-		for(int j = 0; j < mapRules.Length/6; j++)
+		//int multiplier = 6;
+		//int i = 0;
+		for(int j = 0; j < nodes.Count; j++)
 		{
-			i = j * multiplier;
+			//i = j * multiplier;
 
-			int posX = mapRules[i+0];
-			int posY = mapRules[i+1];
-			int posZ = mapRules[i+2];
+			int posX = (int)nodes[j].x;
+			int posY = (int)nodes[j].y;
+            int posZ = (int)nodes[j].z;
 
-			int mapPieceType = mapRules[i+3];
-			int mapPiece = mapRules[i+4];
-			int rotation = mapRules[i+5];
-
-			//Debug.Log("data: " + (i+0) + " :( " + posX + ") " + (i+1) + " :( " + posY + ") " + (i+2) + " :( " + posZ + ") " + (i+3) + " :( " + mapPieceType + ") " + (i+4) + " :( " + mapPiece + ") " + (i+5) + " :( " + rotation + ") ");
+            int mapPieceType = 0; // floors/Vents
+			int mapPiece = Random.Range(0,2); //Map pieces
+			int rotation = Random.Range(0, 4);
 
 			if (nodeCount % sizeSquared == 0) { // clever way to figure out each increase in Layer
 				layerCount += 1;
 			}
 
-			layers = GetMapPiece(mapPieceType, mapPiece);
+            mapPieceType = (layerCount % 2 == 0) ? 0 : 1;
+
+            layers = GetMapPiece(mapPieceType, mapPiece);
 			int rotations = rotation;
 
 			int objectsCountX = posX;
