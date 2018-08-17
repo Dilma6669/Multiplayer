@@ -3,31 +3,34 @@ using UnityEngine.Networking;
 
 public class SyncedVars : NetworkBehaviour {
 
-	PlayerManager _playerManager; 
+	[SyncVar]
+	public int globalSeed = -1;
 
-	private static SyncedVars instance = null;
-
-//	[SyncVar]
-//	public int _connectedPlayers = 0;
+	[SyncVar]
+	public int playerCount = -1;
 
 
-	void Awake() {
-		if (instance == null)
-			instance = this;
-		else if (instance != this) {
-			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-			Destroy (gameObject);
-		}
-
-		_playerManager = FindObjectOfType<PlayerManager> ();
-
-		_playerManager = transform.parent.GetComponentInChildren<PlayerManager> ();
-		if(_playerManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
-
+	public int GlobalSeed
+	{
+		get { return globalSeed; }
+		set { globalSeed = value; }
 	}
-		
-//	[Command]
-//	public void ChangeConnectedPlayers(int change) {
-//		_playerManager._playerAgents[0].CreatePlayer ();
-//	}
+
+	public int PlayerCount
+	{
+		get { return playerCount; }
+		set { playerCount = playerCount + value; }
+	}
+
+
+
+	[Command] //Commands - which are called from the client and run on the server;
+	public void CmdTellServerToUpdatePlayerCount() {
+		RpcUpdatePlayerCountOnClient ();
+	}
+	[ClientRpc] //ClientRpc calls - which are called on the server and run on clients
+	void RpcUpdatePlayerCountOnClient() {
+		PlayerAgent _playerAgent = FindObjectOfType<PlayerAgent> ();
+        _playerAgent.UpdatePlayerCount (PlayerCount + 1);
+    }
 }

@@ -5,54 +5,30 @@ using UnityEngine.Networking;
 
 public class NetWorkManager : NetworkManager {
 
-	CameraManager _cameraManager;
+	SyncedVars _syncedVars;
 
-	PlayerAgent _playerAgent;
-
-	LocationManager _locationManager;
-
-	private static NetWorkManager instance = null;
-
-	void Awake() {
-		if (instance == null)
-			instance = this;
-		else if (instance != this) {
-			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-			Destroy (gameObject);
-		}
-
-		_cameraManager = FindObjectOfType<CameraManager> ();
-
-		_locationManager = FindObjectOfType<LocationManager> ();
-
-	}
-
-	public override void OnStartHost()
-	{
-		Debug.Log("OnStartHost");
-		_playerAgent = FindObjectOfType<PlayerAgent> ();
-		Invoke("CreateRules", 1);
-	}
-
-	private void CreateRules()
-	{
-		_playerAgent = FindObjectOfType<PlayerAgent> ();
-		_playerAgent.CmdGetMapRulesFromServer();
-	}
+    // Need the Awake() function for HUD
+     void Awake() {
+         Debug.Log("NETWORKMANAGER: Awake");
+    }
 
 
-	public override void OnStartClient(NetworkClient client)
-	{
-		Debug.Log("OnStartClient");
-	}
-
-
+	// called on the SERVER when a client connects
 	public override void OnServerConnect(NetworkConnection Conn)
 	{
-		if (Conn.hostId >= 0)
-		{
-			Debug.Log("New Player has joined");
-		}
+        Debug.Log("NETWORKMANAGER: Client Connect!! Con: " + Conn.hostId);
+
+        _syncedVars = FindObjectOfType<SyncedVars>();
+        if (_syncedVars == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+        if (Conn.hostId == -1)
+        {
+            int globalSeed = Random.Range(0, 100);
+            Random.InitState(globalSeed);
+            _syncedVars.GlobalSeed = globalSeed;
+        }
+
+        _syncedVars.PlayerCount = 1;
 	}
 
 

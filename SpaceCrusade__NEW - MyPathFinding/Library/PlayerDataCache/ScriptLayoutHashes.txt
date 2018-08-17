@@ -1,6 +1,6 @@
 WindowsStandalone
 PlayerPath?
-D:/Made Games/SpaceCrusade__NEW - MyPathFinding/Builds/Builds.exe
+D:/Made Games/MultiplayerGIT/SpaceCrusade__NEW - MyPathFinding/BUILDS/BUILDS.exe
 SceneListBegin?
 Assets/Scenes/SampleScene.unity
 Assets/Scenes/MutliplayScreen.unity
@@ -130,11 +130,11 @@ bc68edb0af574bf79f9550ead8ebae5c UnityEngine.HoloLens.dll:UnityEngine.Audio.Audi
 c2275a8bfbb9f9942cad75ecdfded41d UnityEngine.HoloLens.dll:UnityEngine.XR.WSA.SpatialMappingCollider
 45f3431f0103c41611e8d4eec3d439df UnityEngine.HoloLens.dll:UnityEngine.XR.WSA.SpatialMappingRenderer
 05524b8f659e7bfe5756d1335fec24ba Assembly-CSharp.dll:.MovementManager
-a99412934b3372db6ebc555f475fce33 Assembly-CSharp.dll:.PlayerAgent
+1ae03b09c3c48f5ddf4da03c399b9b97 Assembly-CSharp.dll:.PlayerAgent
 1d4443ef0c3191ca0de2948a0977a0fc Assembly-CSharp.dll:.CameraAgent
 5474061c95f1cd14964d8093a3bf129e Assembly-CSharp.dll:.PanelBuilder
 7933a52e53832a448279ffd8a41e7646 Assembly-CSharp.dll:.MapSettings
-05524b8f659e7bfe5756d1335fec24ba Assembly-CSharp.dll:.SyncedVars
+d53e4b53692198eb811651791a6656c1 Assembly-CSharp.dll:.SyncedVars
 3f8b8ee6621fa63992962981cf34a2b4 Assembly-CSharp.dll:.NetWorkManager
 05524b8f659e7bfe5756d1335fec24ba Assembly-CSharp.dll:.PlayerManager
 ae81d35e9476d57bcd71005461bf0787 Assembly-CSharp.dll:.CameraManager

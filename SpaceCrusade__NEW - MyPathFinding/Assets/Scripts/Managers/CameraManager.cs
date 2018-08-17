@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour {
 
-//	private static CameraManager instance = null;
-
 	// Layer INfo
 	public int maxLayer = 3; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
 	public int minLayer = 0;
@@ -13,16 +11,12 @@ public class CameraManager : MonoBehaviour {
 
 	void Awake() {
 
-//		if (instance == null)
-//			instance = this;
-//		else if (instance != this) {
-//			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-//			Destroy (gameObject);
-//		}
 	}
 
 
 	public KeyValuePair<Vector3, Vector3> GetCameraStartPosition(int playerID) {
+
+        Debug.Log("Finding Camera for player: " + playerID);
 
 		List<KeyValuePair<Vector3, Vector3>> cameraPositions = new List<KeyValuePair<Vector3, Vector3>> ();
 

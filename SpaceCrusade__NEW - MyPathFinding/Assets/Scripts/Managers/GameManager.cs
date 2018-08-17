@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
-	private static GameManager instance = null;
-
-
 	[HideInInspector]
 	public LocationManager _locationManager;
 	[HideInInspector]
@@ -17,16 +14,7 @@ public class GameManager : MonoBehaviour {
 //	public NetworkManager _networkManager;
 
 
-
-
 	void Awake() {
-
-		if (instance == null)
-			instance = this;
-		else if (instance != this) {
-			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-			Destroy (gameObject);
-		}
 
 		_locationManager = GetComponentInChildren<LocationManager> ();
 		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}

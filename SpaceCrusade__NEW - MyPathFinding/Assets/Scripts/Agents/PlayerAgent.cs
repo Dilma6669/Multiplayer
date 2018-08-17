@@ -11,36 +11,30 @@ public class PlayerAgent : NetworkBehaviour {
 
 	MapSettings _mapSettings;
 
-	PlayerManager _playerManager;
+    SyncedVars _syncedVars;
+
+    PlayerManager _playerManager;
 	UIManager _uiManager;
 
 	[HideInInspector]
 	CameraAgent _cameraAgent;
-//
-//	[HideInInspector]
-//	public UnitsAgent _unitsAgent;
+    //
+    //	[HideInInspector]
+    //	public UnitsAgent _unitsAgent;
 
 
-
-	[SyncVar]
-	public string SERVER_mapRules = "";
-
-	[SyncVar]
-	public string mapRules = "";
+    public int _playerUniqueID = 0;
+    public int _totalPlayers = -1;
+    public int _seed = -1;
 
 
-	[SyncVar]
-	public int SERVER_totalPlayers = -1;
-
-	public int _totalPlayers = -1;
-	public int _playerUniqueID = -1;
-
-	Text totalPlayerText;
-	Text playerNUmText;
+    Text totalPlayerText;
+    Text playerNumText;
+    Text seedNumText;
 
 
-	// Use this for initialization
-	void Awake () {
+    // Use this for initialization
+    void Awake () {
 
 		_playerManager = FindObjectOfType<PlayerManager> ();
 		if(_playerManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
@@ -60,102 +54,56 @@ public class PlayerAgent : NetworkBehaviour {
 		_locationManager = FindObjectOfType<LocationManager> ();
 		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		//_cameraAgent._playerAgent = this;
-		//_cameraAgent._camera = GetComponent<Camera> ();
-		//_unitsAgent._playerAgent = this;
-	
-		totalPlayerText = _uiManager.transform.FindDeepChild("TotalPlayersNum").GetComponent<Text>();
-		playerNUmText = _uiManager.transform.FindDeepChild("PlayerNum").GetComponent<Text>();
+        //_cameraAgent._playerAgent = this;
+        //_cameraAgent._camera = GetComponent<Camera> ();
+        //_unitsAgent._playerAgent = this;
 
-	}
+        totalPlayerText = _uiManager.transform.FindDeepChild("TotalPlayersNum").GetComponent<Text>();
+        playerNumText = _uiManager.transform.FindDeepChild("PlayerNum").GetComponent<Text>();
+        seedNumText = _uiManager.transform.FindDeepChild("SeedNum").GetComponent<Text>();
 
-	void Start()
-	{
-		Debug.Log ("A network Player object has been created");
-		CreatePlayerAgent ();
-	}
+    }
 
+    // Need this Start()
+    void Start()
+    {
+        Debug.Log("A network Player object has been created");
+        CreatePlayerAgent();
+    }
 
-	void CreatePlayerAgent() {
+    // DONT FUCKING TOUCH THIS FUNCTION
+    void CreatePlayerAgent() {
 
-		transform.SetParent (_playerManager.transform);
+        _syncedVars = FindObjectOfType<SyncedVars>();
+        if (_syncedVars == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+        transform.SetParent (_playerManager.transform);
 		_uiManager.GetComponent<Canvas>().enabled = true;
 
-		CmdGetPlayerIDFromServer(); 
+        _syncedVars.CmdTellServerToUpdatePlayerCount();
+        _seed = _syncedVars.GlobalSeed;
+        seedNumText.text = _seed.ToString();
 
-	}
+        if (isLocalPlayer)
+        {
+            _playerUniqueID = _syncedVars.PlayerCount;
+            playerNumText.text = _playerUniqueID.ToString();
+            ContinuePlayerSetUp();
+        }
+    }
 
-		
-	[Command] //Commands - which are called from the client and run on the server;
-	void CmdGetPlayerIDFromServer() {
-		SERVER_totalPlayers = GetConnectionCount();
-		RpcUpdatePlayerIDAtClient();
-	}
-	[ClientRpc] //ClientRpc calls - which are called on the server and run on clients
-	void RpcUpdatePlayerIDAtClient() {
-		UpdatePlayerID ();
-	}
-	void UpdatePlayerID(){
-		_totalPlayers = SERVER_totalPlayers;
-		totalPlayerText.text = _totalPlayers.ToString ();
 
-		if (isLocalPlayer) {
-			int ID = SERVER_totalPlayers - 1;
-			if (ID <= 0) {
-				ID = 0;
-			}
-			_playerUniqueID = ID;
-			playerNUmText.text = _playerUniqueID.ToString ();
-
-			ContinuePlayerSetUp (); 
-
-		}
-
-		UpdateMapRules ();
-
-		_locationManager.BuildMapForClient (mapRules);
-	}
+    public void UpdatePlayerCount(int count)
+    {
+        _totalPlayers = count;
+        totalPlayerText.text = _totalPlayers.ToString();
+    }
 
 
 
-	void ContinuePlayerSetUp()
+    void ContinuePlayerSetUp()
 	{
-			_cameraAgent.SetUpCameraAndLayers (_playerUniqueID);
-
+	    _cameraAgent.SetUpCameraAndLayers (_playerUniqueID);
 	}
-		
-
-	[Command] //Commands - which are called from the client and run on the server;
-	public void CmdGetMapRulesFromServer() {
-
-		Debug.Log ("CALCULATING RULES<<");
-		//string rules = _locationManager.BuildMapForHost ();
-		SERVER_mapRules = _locationManager.BuildMapForHost ();
-
-		RpcUpdateMapRulesAtClient ();
-	}
-
-	[ClientRpc] //ClientRpc calls - which are called on the server and run on clients
-	void RpcUpdateMapRulesAtClient() {
-		UpdateMapRules ();
-	}
-	void UpdateMapRules(){
-		mapRules = SERVER_mapRules;
-		Debug.Log ("mapRules: " + mapRules);
-	}
-//
-//
-
-	// Network
-	int GetConnectionCount()
-	{
-		int count = 0;
-		foreach (NetworkConnection con in NetworkServer.connections)
-		{
-			if (con != null)
-				count++;
-		}
-		return count;
-	}
-		
+	
 }
