@@ -7,59 +7,61 @@ using UnityEngine.Networking;
 
 public class PlayerAgent : NetworkBehaviour {
 
-	LocationManager _locationManager;
 
-	MapSettings _mapSettings;
+    GameManager _gameManager;
+
+    PlayerManager _playerManager;
+    UIManager _uiManager;
+    LocationManager _locationManager;
 
     SyncedVars _syncedVars;
 
-    PlayerManager _playerManager;
-	UIManager _uiManager;
-
-	[HideInInspector]
 	CameraAgent _cameraAgent;
     //
     //	[HideInInspector]
     //	public UnitsAgent _unitsAgent;
 
+    BasePlayerData _playerData;
 
     public int _playerUniqueID = 0;
+    public string _playerName = "???";
     public int _totalPlayers = -1;
     public int _seed = -1;
 
-
+    Text playerIDText;
+    Text playerNameText;
     Text totalPlayerText;
-    Text playerNumText;
     Text seedNumText;
 
 
     // Use this for initialization
-    void Awake () {
+    void Awake () { // NAMES ARNT WORKING NOW!!!!!!!!!!!!!!!!!!!!!!
 
-		_playerManager = FindObjectOfType<PlayerManager> ();
+        _gameManager = FindObjectOfType<GameManager>();
+        if (_gameManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+        _playerManager = _gameManager._playerManager;
 		if(_playerManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_uiManager = FindObjectOfType<UIManager> ();
-		if(_uiManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
+        _uiManager = _gameManager._uiManager;
+        if (_uiManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 		_cameraAgent = GetComponent<CameraAgent> ();
 		if(_cameraAgent == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_mapSettings = FindObjectOfType<MapSettings> ();
-		if(_mapSettings == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-//		_unitsAgent = GetComponentInChildren<UnitsAgent> ();
-//		if(_unitsAgent == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_locationManager = FindObjectOfType<LocationManager> ();
-		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
+        _locationManager = FindObjectOfType<LocationManager>(); // THIS IS WEIRD NOT SURE WHY CAN TBE LIKE OTHERS AND GET FROM GAME MANAGER
+        if (_locationManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
 
-        //_cameraAgent._playerAgent = this;
-        //_cameraAgent._camera = GetComponent<Camera> ();
-        //_unitsAgent._playerAgent = this;
+        //unitsAgent = _gameManager._playerManager;
+        //if(_unitsAgent == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
+
+
+        playerIDText = _uiManager.transform.FindDeepChild("PlayerNum").GetComponent<Text>();
+        playerNameText = _uiManager.transform.FindDeepChild("PlayerName").GetComponent<Text>();
         totalPlayerText = _uiManager.transform.FindDeepChild("TotalPlayersNum").GetComponent<Text>();
-        playerNumText = _uiManager.transform.FindDeepChild("PlayerNum").GetComponent<Text>();
         seedNumText = _uiManager.transform.FindDeepChild("SeedNum").GetComponent<Text>();
 
     }
@@ -89,7 +91,9 @@ public class PlayerAgent : NetworkBehaviour {
         if (isLocalPlayer)
         {
             _playerUniqueID = _syncedVars.PlayerCount;
-            playerNumText.text = _playerUniqueID.ToString();
+            playerIDText.text = _playerUniqueID.ToString();
+            _playerData = _playerManager.GetPlayerData(_playerUniqueID);
+            playerNameText.text = _playerData.name;
             ContinuePlayerSetUp();
         }
     }

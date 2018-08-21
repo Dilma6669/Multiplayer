@@ -5,65 +5,71 @@ using UnityEngine.Networking;
 
 public class LocationManager : NetworkBehaviour {
 
+    GameManager _gameManager;
 
 	GridBuilder _gridBuilder;
 	MapPieceBuilder _mapPieceBuilder;
-	CubeConnections _cubeConnections;
+    ConnectorPieceBuilder _connectorPieceBuilder;
+    PlayerShipBuilder _playerShipBuilder;
+
+    CubeConnections _cubeConnections;
 
 	MapSettings _mapSettings;
 
-
-	private int MAP_PIECE_TYPE_FLOOR = 0;
-	private int MAP_PIECE_TYPE_VENTS = 1;
-
-	private int NUM_FLOOR_MAPS = 2;
-	private int NUM_VENT_MAPS = 2;
 
 	public Dictionary<Vector3, CubeLocationScript> _LocationLookup = new Dictionary<Vector3, CubeLocationScript>();
 
 	void Awake() {
 
-		_gridBuilder = GetComponentInChildren<GridBuilder> ();
+        _gameManager = FindObjectOfType<GameManager>();
+        if (_gameManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+
+
+        _gridBuilder = GetComponentInChildren<GridBuilder> ();
 		if(_gridBuilder == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 		_mapPieceBuilder = GetComponentInChildren<MapPieceBuilder> ();
 		if(_mapPieceBuilder == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_cubeConnections = GetComponent<CubeConnections> ();
+        _connectorPieceBuilder = GetComponentInChildren<ConnectorPieceBuilder>();
+        if (_connectorPieceBuilder == null) { Debug.LogError("OOPSALA we have an ERROR!");}
+
+        _playerShipBuilder = GetComponentInChildren<PlayerShipBuilder>();
+        if (_playerShipBuilder == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+
+
+        _cubeConnections = GetComponent<CubeConnections> ();
 		if(_cubeConnections == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 		_mapSettings = GetComponent<MapSettings> ();
 		if(_mapSettings == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 	}
-    /*
-	public string BuildMapForHost () {
-
-		_gridBuilder.InitialiseGridManager ();
-		_gridBuilder.StartGridBuilding();
-		_LocationLookup = _gridBuilder.GetGridLocations ();
-		List<Vector3> MapNodeGridLocLookup = _gridBuilder.GetMapNodes (); // Might want to remove grid from host
-
-		return GetMapRules(MapNodeGridLocLookup);	
-	}
-    */
 
 	public void BuildMapForClient () {
 
 		_gridBuilder.InitialiseGridManager ();
 		_gridBuilder.StartGridBuilding();
 		_LocationLookup = _gridBuilder.GetGridLocations ();
-		List<Vector3> MapNodeGridLocLookup = _gridBuilder.GetMapNodes ();
+
+        List<Vector3> mapPieceNodes = _gridBuilder.GetMapNodes ();
+        _mapPieceBuilder.AttachMapPieceToMapNode (mapPieceNodes);
+
+        List<Vector3> connectPieceNodes = _gridBuilder.GetConnectNodes();
+        _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectPieceNodes);
+
+        List<Vector3> shipPieceNodes = _gridBuilder.GetShipNodes();
+        //_playerShipBuilder.AttachShipPieceToMapNode (shipPieceNodes);
+
+        //	SetCubeNeighbours ();
+    }
 
 
-		_mapPieceBuilder.AttachMapPieceToMapNode (MapNodeGridLocLookup);
-		//	SetCubeNeighbours ();
-	}
-		
 
 
-
-	public bool CheckIfLocationExists(Vector3 loc) {
+    public bool CheckIfLocationExists(Vector3 loc) {
 
 		if (_LocationLookup.ContainsKey (loc)) {
 			return true;

@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Networking;
 using UnityEngine;
 
-public class MapPieceBuilder: NetworkBehaviour {
+public class MapPieceBuilder: MonoBehaviour {
 
 	LocationManager _locationManager;
 	CubeBuilder _cubeBuilder;
@@ -21,7 +20,7 @@ public class MapPieceBuilder: NetworkBehaviour {
 		_locationManager = transform.parent.GetComponent<LocationManager> ();
 		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_cubeBuilder = GetComponentInChildren<CubeBuilder> ();
+		_cubeBuilder = transform.parent.GetComponentInChildren<CubeBuilder> ();
 		if(_cubeBuilder == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 		_mapSettings = transform.parent.GetComponent<MapSettings> ();
@@ -37,112 +36,180 @@ public class MapPieceBuilder: NetworkBehaviour {
 
 	private IEnumerator BuildMapsByIEnum(List<Vector3> nodes, float waitTime) {
 
-		Vector3 GridLoc;
+
+        int numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
+        int sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
+        int sizeOfMapPieces = _mapSettings.sizeOfMapPieces;
+
+        Vector3 GridLoc;
 
 		List<int[,]> layers = new List<int[,]>();
 		int[,] floor;
 
-		int sizeSquared = _mapSettings.numMapPiecesXZ * _mapSettings.numMapPiecesXZ;
+
 		int nodeCount = 0;
 		int layerCount = -1;
 
-		//int multiplier = 6;
-		//int i = 0;
-		for(int j = 0; j < nodes.Count; j++)
-		{
-			//i = j * multiplier;
+        // This is to have same roofs to special floors
+        int[,] pieceRotStore = new int[sizeSquared, 2];
 
-			int posX = (int)nodes[j].x;
-			int posY = (int)nodes[j].y;
+        for (int j = 0; j < nodes.Count; j++)
+        {
+            int posX = (int)nodes[j].x;
+            int posY = (int)nodes[j].y;
             int posZ = (int)nodes[j].z;
 
-            int mapPieceType = 0; // floors/Vents
-			int mapPiece = Random.Range(0,2); //Map pieces
-			int rotation = Random.Range(0, 4);
+            int modulusResult = nodeCount % sizeSquared;
 
-			if (nodeCount % sizeSquared == 0) { // clever way to figure out each increase in Layer
-				layerCount += 1;
-			}
+            if (modulusResult == 0)
+            { // clever way to figure out each increase in Layer
+                layerCount += 1;
+            }
 
-            mapPieceType = (layerCount % 2 == 0) ? 0 : 1;
+            int mapPieceType = (layerCount % 2 == 0) ? 0 : 1; // floors/Vents
+            int mapPiece = Random.Range(1, 4); //Map pieces // 0 = Entrance so dont use here
+            int rotation = Random.Range(0, 4);
+
+            // Working Out Corners
+            bool corner = false;
+            if (modulusResult == 0 ||
+                modulusResult == (numMapPiecesXZ - 1) ||
+                modulusResult == (sizeSquared - 1) - (numMapPiecesXZ - 1) ||
+                modulusResult == sizeSquared - 1)
+            {
+                corner = true;
+                mapPiece = 2;
+            }
+
+            // Ships Edges without corners
+            if (!corner)
+            {
+                if (modulusResult >= 0 && modulusResult <= (numMapPiecesXZ - 1)) // Bottom entrances
+                {
+                    rotation = 3;
+                    mapPiece = 0;
+                }
+                else if (modulusResult >= (sizeSquared - 1) - (numMapPiecesXZ - 1) && modulusResult <= sizeSquared - 1) // Top Entrances
+                {
+                    rotation = 1;
+                    mapPiece = 0;
+                }
+                else if (nodeCount % numMapPiecesXZ == 0) // Left Entrances ?
+                {
+                    rotation = 2;
+                    mapPiece = 0;
+                }
+                else if (nodeCount % numMapPiecesXZ == (numMapPiecesXZ - 1)) // Right Entrances ?
+                {
+                    rotation = 4;
+                    mapPiece = 0;
+                }
+            }
+
+            // If floor rememeber settings to apply to vents (NOTE: this could be used to make some pieces not deterministic)
+            if (mapPieceType == 0)
+            {
+                pieceRotStore[j % sizeSquared, 0] = mapPiece;
+                pieceRotStore[j % sizeSquared, 1] = rotation;
+            }
+            else
+            {
+                mapPiece = pieceRotStore[j % sizeSquared, 0];
+                rotation = pieceRotStore[j % sizeSquared, 1];
+            }
+
 
             layers = GetMapPiece(mapPieceType, mapPiece);
-			int rotations = rotation;
+            int rotations = rotation;
 
-			int objectsCountX = posX;
-			int objectsCountY = posY;
-			int objectsCountZ = posZ;
+            int objectsCountX = posX;
+            int objectsCountY = posY;
+            int objectsCountZ = posZ;
 
-			for (int y = 0; y < layers.Count; y++) {
+            for (int y = 0; y < layers.Count; y++)
+            {
 
-				objectsCountX = posX;
-				objectsCountZ = posZ;
+                objectsCountX = posX;
+                objectsCountZ = posZ;
 
-				floor = layers [y];
+                floor = layers[y];
 
-				for (int r = 0; r < rotations; r++) {
-					floor = TransposeArray (floor, _mapSettings.sizeOfMapPieces-1);
-				}
-					
-				for (int z = 0; z < floor.GetLength(0); z++) {
+                for (int r = 0; r < rotations; r++)
+                {
+                    floor = TransposeArray(floor, sizeOfMapPieces - 1);
+                }
 
-					objectsCountX = posX;
+                for (int z = 0; z < floor.GetLength(0); z++)
+                {
 
-					for (int x = 0; x < floor.GetLength(1); x++) {
+                    objectsCountX = posX;
 
-						int cubeType = floor [z, x];
-						GridLoc = new Vector3 (objectsCountX, objectsCountY, objectsCountZ);
+                    for (int x = 0; x < floor.GetLength(1); x++)
+                    {
 
-						CubeLocationScript cubeScript = _locationManager.GetLocationScript (GridLoc);
+                        int cubeType = floor[z, x];
+                        GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
 
-						if(cubeScript != null) {
-							_cubeBuilder.CreateCubeObject(ref cubeScript, cubeType, rotations, layerCount); // Create the cube
-						}
+                        _cubeBuilder.CreateCubeObject(GridLoc, cubeType, rotations, layerCount); // Create the cube
 
-						objectsCountX += 1;
-					}
-					objectsCountZ += 1;
-				}
-				objectsCountY += 1;
-			}
-			nodeCount += 1;
+                        objectsCountX += 1;
+                    }
+                    objectsCountZ += 1;
+                }
+                objectsCountY += 1;
+            }
+            nodeCount += 1;
 
-			yield return new WaitForSeconds (waitTime);
-		}
-
-		//_gameManager.MapsFinishedLoading ();
+            yield return new WaitForSeconds(waitTime);
+        }
 	}
 
-	// Get map by type and piece
+	// Get map by type and piece (NOTE: at the moment needs to be same amount of case's in each type)
 	private List<int[,]> GetMapPiece(int type, int map) {
 
 		switch (type) { 
 		case 0: // Floor
-			BaseRoom mapPiece = null;
-			switch (map) {
-			case 0:
-				mapPiece = ScriptableObject.CreateInstance<SquareRoom01> ();
-				break;
-			case 1:
-				mapPiece = ScriptableObject.CreateInstance<SquareRoom02> ();
-				break;
-			default:
-				break;
-			}
+			BaseMapPiece mapPiece = null;
+                switch (map)
+                {
+                    case 0:
+                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Entrance_01>();
+                        break;
+                    case 1:
+                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Corridor_01>();
+                        break;
+                    case 2:
+                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Room_01>();
+                        break;
+                    case 3:
+                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Corridor_02>();
+                        break;
+                    default:
+                        Debug.LogError("OPSALA SOMETHING WRONG HERE!");
+                        break;
+                }
 			return mapPiece.floors;
 
 		case 1:
-			BaseRoom ventPiece = null;
-			switch (map) {
-			case 0:
-				ventPiece = ScriptableObject.CreateInstance<SquareVents01> ();
-				break;
-			case 1:
-				ventPiece = ScriptableObject.CreateInstance<SquareVents02> ();
-				break;
-			default:
-				break;
-			}
+                BaseMapPiece ventPiece = null;
+                switch (map)
+                {
+                    case 0:
+                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Room_01>();
+                        break;
+                    case 1:
+                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Room_01>();
+                        break;
+                    case 2:
+                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Room_01>();
+                        break;
+                    case 3:
+                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Corridor_02>();
+                        break;
+                    default:
+                        Debug.LogError("OPSALA SOMETHING WRONG HERE!");
+                        break;
+                }
 			return ventPiece.floors;
 
 		default:

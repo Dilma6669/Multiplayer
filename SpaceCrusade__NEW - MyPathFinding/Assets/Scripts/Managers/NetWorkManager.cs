@@ -5,11 +5,13 @@ using UnityEngine.Networking;
 
 public class NetWorkManager : NetworkManager {
 
-	SyncedVars _syncedVars;
+	public SyncedVars _syncedVars;
 
     // Need the Awake() function for HUD
      void Awake() {
          Debug.Log("NETWORKMANAGER: Awake");
+
+        _syncedVars = GetComponentInChildren<SyncedVars>();
     }
 
 

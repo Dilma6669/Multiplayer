@@ -5,9 +5,12 @@ using UnityEngine;
 public class CameraManager : MonoBehaviour {
 
 	// Layer INfo
-	public int maxLayer = 3; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
-	public int minLayer = 0;
-	public int startLayer = 1;
+    [HideInInspector]
+	public int maxLayer = 5; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
+    [HideInInspector]
+    public int minLayer = 0;
+    [HideInInspector]
+    public int startLayer = 0;
 
 	void Awake() {
 

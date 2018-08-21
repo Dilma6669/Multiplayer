@@ -1,8 +1,18 @@
 ﻿
+public class PlayerData_02 : BasePlayerData {
 
-public class Player02 {
+    public PlayerData_02()
+    {
+        name = "Fred";
 
-	public string name = "Fred";
+        shipRoom = new int[,]
+        { { 0, 0 }, { 0, 0 },
+          { 0, 0 }, { 0, 0 },
+          { 1, 0 }, { 1, 0 },
+          { 0, 0 }, { 0, 0 },
+          { 0, 0 }, { 0, 0 },
+        };
 
-	public int numUnits = 3;
+        numUnits = 3;
+    }
 }

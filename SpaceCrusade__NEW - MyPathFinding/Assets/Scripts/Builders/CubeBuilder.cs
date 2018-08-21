@@ -4,22 +4,21 @@ using UnityEngine;
 
 public class CubeBuilder : MonoBehaviour {
 
-	public static CubeBuilder instance = null;
+    public GameObject _defaultCubePrefab; // Debugging purposes
 
-	PanelBuilder _panelBuilder;
+    GridBuilder _gridBuilder;
+
+    PanelBuilder _panelBuilder;
 	ObjectBuilder _objectBuilder;
 
 	private int rotationY = 0;
 
 	void Awake() {
-		if (instance == null)
-			instance = this;
-		else if (instance != this) {
-			Debug.LogError ("OOPSALA we have an ERROR! More than one instance bein created");
-			Destroy (gameObject);
-		}
 
-		_panelBuilder = GetComponentInChildren<PanelBuilder> ();
+        _gridBuilder = transform.parent.GetComponentInChildren<GridBuilder>();
+        if (_gridBuilder == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+        _panelBuilder = GetComponentInChildren<PanelBuilder> ();
 		if(_panelBuilder == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 		_objectBuilder = GetComponentInChildren<ObjectBuilder> ();
@@ -27,14 +26,20 @@ public class CubeBuilder : MonoBehaviour {
 	}
 		
 
-	public void CreateCubeObject(ref CubeLocationScript oldCubeScript, int cubeType, int rotations, int layerCount){
+	public void CreateCubeObject(Vector3 gridLoc, int cubeType, int rotations, int layerCount){
 
 		rotationY = (rotations * -90) % 360;
 
-		GameObject cubeObject = oldCubeScript.gameObject; // empty cube
-		CubeLocationScript cubeScript = cubeObject.GetComponent<CubeLocationScript> ();
+        GameObject cubeObject = Instantiate(_defaultCubePrefab, transform, false); // empty cube
+        cubeObject.transform.SetParent(transform);
+        cubeObject.transform.position = gridLoc;
+        CubeLocationScript cubeScript = cubeObject.GetComponent<CubeLocationScript>();
+
+        _gridBuilder._GridLocToScriptLookup[gridLoc] = cubeScript;
+
+        cubeScript.cubeLoc = gridLoc;
 		cubeObject.transform.eulerAngles = new Vector3 (0, rotationY, 0);
-		cubeObject.gameObject.layer = LayerMask.NameToLayer ("Floor" + layerCount.ToString ());
+        cubeObject.gameObject.layer = LayerMask.NameToLayer ("Floor" + layerCount.ToString ());
 
 		cubeScript.cubeAngle = (int)rotationY;
 
