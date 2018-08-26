@@ -14,8 +14,16 @@ public class MapPieceBuilder: MonoBehaviour {
 
 	private bool loadVents = false;
 
+    int numMapPiecesXZ;
+    int sizeSquared;
+    int sizeOfMapPieces;
 
-	void Awake() {
+    int nodeCount = 0;
+    int layerCount = -1;
+
+    int[,] pieceRotStore;
+
+    void Awake() {
 
 		_locationManager = transform.parent.GetComponent<LocationManager> ();
 		if(_locationManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
@@ -28,141 +36,107 @@ public class MapPieceBuilder: MonoBehaviour {
 	}
 
 
-	public void AttachMapPieceToMapNode(List<Vector3> nodes) {
+	public void AttachMapPieceToMapNode(List<Vector3> nodes, float waitTime) {
 
-		StartCoroutine (BuildMapsByIEnum (nodes, 0.001f));
-	}
-		
+        numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
+        sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
+        sizeOfMapPieces = _mapSettings.sizeOfMapPiecesXZ;
 
-	private IEnumerator BuildMapsByIEnum(List<Vector3> nodes, float waitTime) {
-
-
-        int numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
-        int sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
-        int sizeOfMapPieces = _mapSettings.sizeOfMapPieces;
-
-        Vector3 GridLoc;
-
-		List<int[,]> layers = new List<int[,]>();
-		int[,] floor;
-
-
-		int nodeCount = 0;
-		int layerCount = -1;
+        nodeCount = 0;
+        layerCount = -1;
 
         // This is to have same roofs to special floors
-        int[,] pieceRotStore = new int[sizeSquared, 2];
+        pieceRotStore = new int[sizeSquared, 2];
 
         for (int j = 0; j < nodes.Count; j++)
         {
-            int posX = (int)nodes[j].x;
-            int posY = (int)nodes[j].y;
-            int posZ = (int)nodes[j].z;
+            BuildMapsByIEnum(nodes[j], j);
 
-            int modulusResult = nodeCount % sizeSquared;
+            nodeCount += 1;
 
-            if (modulusResult == 0)
-            { // clever way to figure out each increase in Layer
-                layerCount += 1;
-            }
+         //yield return new WaitForSeconds(waitTime);
+        }
+	}
 
-            int mapPieceType = (layerCount % 2 == 0) ? 0 : 1; // floors/Vents
-            int mapPiece = Random.Range(1, 4); //Map pieces // 0 = Entrance so dont use here
-            int rotation = Random.Range(0, 4);
 
-            // Working Out Corners
-            bool corner = false;
-            if (modulusResult == 0 ||
-                modulusResult == (numMapPiecesXZ - 1) ||
-                modulusResult == (sizeSquared - 1) - (numMapPiecesXZ - 1) ||
-                modulusResult == sizeSquared - 1)
+    private void BuildMapsByIEnum(Vector3 nodeLoc, int j)
+    {
+        int posX = (int)nodeLoc.x;
+        int posY = (int)nodeLoc.y;
+        int posZ = (int)nodeLoc.z;
+
+        Vector3 GridLoc;
+
+        List<int[,]> layers = new List<int[,]>();
+        int[,] floor;
+
+        int modulusResult = nodeCount % sizeSquared;
+
+        // clever way to figure out each increase in Layer
+        if (modulusResult == 0)
+        {
+            layerCount += 1;
+        }
+
+        int mapPieceType = (layerCount % 2 == 0) ? 0 : 1; // floors/Vents
+        int mapPiece = Random.Range(1, 4); //Map pieces // 0 = Entrance so dont use here
+        int rotation = Random.Range(0, 4);
+
+        // If floor rememeber settings to apply to vents (NOTE: this could be used to make some pieces not deterministic)
+        if (mapPieceType == 0)
+        {
+            pieceRotStore[j % sizeSquared, 0] = mapPiece;
+            pieceRotStore[j % sizeSquared, 1] = rotation;
+        }
+        else
+        {
+            mapPiece = pieceRotStore[j % sizeSquared, 0];
+            rotation = pieceRotStore[j % sizeSquared, 1];
+        } 
+        
+
+        layers = GetMapPiece(mapPieceType, mapPiece);
+        int rotations = rotation;
+
+        int objectsCountX = posX;
+        int objectsCountY = posY;
+        int objectsCountZ = posZ;
+
+        for (int y = 0; y < layers.Count; y++)
+        {
+
+            objectsCountX = posX;
+            objectsCountZ = posZ;
+
+            floor = layers[y];
+
+            for (int r = 0; r < rotations; r++)
             {
-                corner = true;
-                mapPiece = 2;
+                floor = TransposeArray(floor, sizeOfMapPieces - 1);
             }
 
-            // Ships Edges without corners
-            if (!corner)
-            {
-                if (modulusResult >= 0 && modulusResult <= (numMapPiecesXZ - 1)) // Bottom entrances
-                {
-                    rotation = 3;
-                    mapPiece = 0;
-                }
-                else if (modulusResult >= (sizeSquared - 1) - (numMapPiecesXZ - 1) && modulusResult <= sizeSquared - 1) // Top Entrances
-                {
-                    rotation = 1;
-                    mapPiece = 0;
-                }
-                else if (nodeCount % numMapPiecesXZ == 0) // Left Entrances ?
-                {
-                    rotation = 2;
-                    mapPiece = 0;
-                }
-                else if (nodeCount % numMapPiecesXZ == (numMapPiecesXZ - 1)) // Right Entrances ?
-                {
-                    rotation = 4;
-                    mapPiece = 0;
-                }
-            }
-
-            // If floor rememeber settings to apply to vents (NOTE: this could be used to make some pieces not deterministic)
-            if (mapPieceType == 0)
-            {
-                pieceRotStore[j % sizeSquared, 0] = mapPiece;
-                pieceRotStore[j % sizeSquared, 1] = rotation;
-            }
-            else
-            {
-                mapPiece = pieceRotStore[j % sizeSquared, 0];
-                rotation = pieceRotStore[j % sizeSquared, 1];
-            }
-
-
-            layers = GetMapPiece(mapPieceType, mapPiece);
-            int rotations = rotation;
-
-            int objectsCountX = posX;
-            int objectsCountY = posY;
-            int objectsCountZ = posZ;
-
-            for (int y = 0; y < layers.Count; y++)
+            for (int z = 0; z < floor.GetLength(0); z++)
             {
 
                 objectsCountX = posX;
-                objectsCountZ = posZ;
 
-                floor = layers[y];
-
-                for (int r = 0; r < rotations; r++)
-                {
-                    floor = TransposeArray(floor, sizeOfMapPieces - 1);
-                }
-
-                for (int z = 0; z < floor.GetLength(0); z++)
+                for (int x = 0; x < floor.GetLength(1); x++)
                 {
 
-                    objectsCountX = posX;
+                    int cubeType = floor[z, x];
+                    GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
 
-                    for (int x = 0; x < floor.GetLength(1); x++)
-                    {
+                    _cubeBuilder.CreateCubeObject(GridLoc, cubeType, rotations, layerCount); // Create the cube
 
-                        int cubeType = floor[z, x];
-                        GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
-
-                        _cubeBuilder.CreateCubeObject(GridLoc, cubeType, rotations, layerCount); // Create the cube
-
-                        objectsCountX += 1;
-                    }
-                    objectsCountZ += 1;
+                    objectsCountX += 1;
                 }
-                objectsCountY += 1;
+                objectsCountZ += 1;
             }
-            nodeCount += 1;
-
-            yield return new WaitForSeconds(waitTime);
+            objectsCountY += 1;
         }
-	}
+    }
+
+
 
 	// Get map by type and piece (NOTE: at the moment needs to be same amount of case's in each type)
 	private List<int[,]> GetMapPiece(int type, int map) {

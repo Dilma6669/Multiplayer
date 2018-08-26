@@ -209,6 +209,7 @@ Assets/Scripts/Builders/PlayerShipBuilder.cs
 Assets/Scripts/Builders/ShipsData/BaseShipPiece.cs
 Assets/Scripts/Builders/ShipsData/ShipRoom_01.cs
 Assets/Scripts/Builders/ShipsData/ShipRoom_02.cs
+Assets/Scripts/Builders/WorldBuilder.cs
 Assets/Scripts/Managers/CameraManager.cs
 Assets/Scripts/Managers/CombatManager.cs
 Assets/Scripts/Managers/GameManager.cs

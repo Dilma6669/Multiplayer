@@ -78,6 +78,7 @@
      <Compile Include="Assets\Scripts\Builders\ShipsData\BaseShipPiece.cs" />
      <Compile Include="Assets\Scripts\Builders\ShipsData\ShipRoom_01.cs" />
      <Compile Include="Assets\Scripts\Builders\ShipsData\ShipRoom_02.cs" />
+     <Compile Include="Assets\Scripts\Builders\WorldBuilder.cs" />
      <Compile Include="Assets\Scripts\Managers\CameraManager.cs" />
      <Compile Include="Assets\Scripts\Managers\CombatManager.cs" />
      <Compile Include="Assets\Scripts\Managers\GameManager.cs" />

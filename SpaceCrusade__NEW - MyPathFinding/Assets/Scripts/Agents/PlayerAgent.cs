@@ -35,10 +35,11 @@ public class PlayerAgent : NetworkBehaviour {
 
 
     // Use this for initialization
-    void Awake () { // NAMES ARNT WORKING NOW!!!!!!!!!!!!!!!!!!!!!!
+    void Awake () {
 
         _gameManager = FindObjectOfType<GameManager>();
         if (_gameManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
 
         _playerManager = _gameManager._playerManager;
 		if(_playerManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
@@ -46,13 +47,14 @@ public class PlayerAgent : NetworkBehaviour {
         _uiManager = _gameManager._uiManager;
         if (_uiManager == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
-		_cameraAgent = GetComponent<CameraAgent> ();
+        _locationManager = _gameManager._locationManager;
+        if (_locationManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+
+        _cameraAgent = GetComponent<CameraAgent> ();
 		if(_cameraAgent == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 
 
-
-        _locationManager = FindObjectOfType<LocationManager>(); // THIS IS WEIRD NOT SURE WHY CAN TBE LIKE OTHERS AND GET FROM GAME MANAGER
-        if (_locationManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
 
         //unitsAgent = _gameManager._playerManager;
         //if(_unitsAgent == null){Debug.LogError ("OOPSALA we have an ERROR!");}

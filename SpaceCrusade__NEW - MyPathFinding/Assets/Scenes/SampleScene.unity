@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311992, g: 0.38074034, b: 0.35872713, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -128,7 +128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!108 &170076734
 Light:
   m_ObjectHideFlags: 0
@@ -690,7 +690,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1205384530}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &386409870
 MonoBehaviour:
@@ -809,7 +809,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1205384530}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &416892258
 MonoBehaviour:
@@ -1938,7 +1938,6 @@ GameObject:
   - component: {fileID: 1205384534}
   - component: {fileID: 1205384533}
   - component: {fileID: 1205384532}
-  - component: {fileID: 1205384531}
   m_Layer: 0
   m_Name: LocationManager
   m_TagString: Untagged
@@ -1957,6 +1956,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 1742657203}
   - {fileID: 1873233520}
   - {fileID: 1850626085}
   - {fileID: 1664088926}
@@ -1965,39 +1965,6 @@ Transform:
   m_Father: {fileID: 1369759043}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1205384531
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 114305464997694908, guid: 6f3c016b78b018842a114f4134f1db1e,
-    type: 2}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1205384529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 372142912, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 111
-    i1: 60
-    i2: 1
-    i3: 107
-    i4: 120
-    i5: 176
-    i6: 24
-    i7: 132
-    i8: 42
-    i9: 17
-    i10: 79
-    i11: 65
-    i12: 52
-    i13: 241
-    i14: 219
-    i15: 30
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 1
 --- !u!114 &1205384532
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2010,13 +1977,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 697922376aa82e948b9b9c5deb718f60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldSizeXZ: 1
+  worldSizeY: 2
+  worldType: 0
   numMapPiecesXZ: 1
   numMapPiecesY: 1
-  sizeOfMapPieces: 24
-  heightOfMapPieces: 6
+  sizeOfMapPiecesXZ: 24
+  sizeOfMapPiecesY: 6
+  sizeOfMapVentsY: 2
+  sizeOfMapConnectorsXYZ: 1
+  sizeOfCubes: 1
   totalXZCubes: 0
   totalYCubes: 0
-  sizeOfCubes: 1
 --- !u!114 &1205384533
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2712,7 +2684,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1205384530}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1664088927
 MonoBehaviour:
@@ -2805,6 +2777,52 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1709399909}
   m_CullTransparentMesh: 0
+--- !u!1 &1742657202
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1742657203}
+  - component: {fileID: 1742657204}
+  m_Layer: 0
+  m_Name: WorldBuilder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1742657203
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1742657202}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1205384530}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1742657204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1742657202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 301b39e0e9730f44480152305000a2dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _spawnPrefab: {fileID: 1547244896969346, guid: 86be03147d0ef594191e06ac0e083740,
+    type: 2}
+  _worldMapNodePrefab: {fileID: 1405555291629814, guid: 7e33d636405ffb945ae930dc6d9634b0,
+    type: 2}
+  _worldConnectorNodePrefab: {fileID: 1850000897043822, guid: 43db2d5d4642c9f4b9503f8a7305a741,
+    type: 2}
 --- !u!1 &1767387619
 GameObject:
   m_ObjectHideFlags: 0
@@ -2879,7 +2897,7 @@ Transform:
   - {fileID: 1767387620}
   - {fileID: 1437283827}
   m_Father: {fileID: 1205384530}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1850626086
 MonoBehaviour:
@@ -2924,7 +2942,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1205384530}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1873233521
 MonoBehaviour:
@@ -2938,11 +2956,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68aeca4026b4b8945b59c0155fee6abb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _defaultCubePrefab: {fileID: 1019329122095010, guid: 68525f412ae875344949e15cb66c6be7,
+  _defaultCubePrefab: {fileID: 0}
+  _spawnPrefab: {fileID: 1547244896969346, guid: 86be03147d0ef594191e06ac0e083740,
     type: 2}
   _gridObjectPrefab: {fileID: 1915185008064254, guid: 61a4c25be9fcc9a4bbc54478190056f0,
-    type: 2}
-  _spawnPrefab: {fileID: 1547244896969346, guid: 86be03147d0ef594191e06ac0e083740,
     type: 2}
   _mapNodePrefab: {fileID: 1388036142563308, guid: 9df70b271db67294fb8881eeb5539a97,
     type: 2}
@@ -2950,7 +2967,7 @@ MonoBehaviour:
     type: 2}
   _shipNodePrefab: {fileID: 1129343853981196, guid: 89419822c2961e64994ec64ffd6ba495,
     type: 2}
-  _debugGridObjects: 0
+  _debugGridObjects: 1
 --- !u!1 &1899989610
 GameObject:
   m_ObjectHideFlags: 0
@@ -3410,6 +3427,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b32f1de8eb3c6c145a83a3c4b9b0da2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxLayer: 3
-  minLayer: 0
-  startLayer: 1

@@ -4,10 +4,6 @@
 -langversion:4
 -out:Temp/Assembly-CSharp.dll
 -nostdlib
--r:Library/ScriptAssemblies/UnityEditor.StandardEvents.dll
--r:Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll
--r:Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll
--r:Library/ScriptAssemblies/Unity.TextMeshPro.dll
 -r:D:\Programs\Unity\Editor\Data\Managed/UnityEngine/UnityEngine.dll
 -r:D:\Programs\Unity\Editor\Data\Managed/UnityEngine/UnityEngine.AIModule.dll
 -r:D:\Programs\Unity\Editor\Data\Managed/UnityEngine/UnityEngine.ARModule.dll
@@ -69,6 +65,10 @@
 -r:D:\Programs\Unity\Editor\Data\Managed/UnityEngine/UnityEngine.XRModule.dll
 -r:D:\Programs\Unity\Editor\Data\Managed/UnityEditor.dll
 -r:D:\Programs\Unity\Editor\Data\Managed/Unity.Locator.dll
+-r:Library/ScriptAssemblies/UnityEditor.StandardEvents.dll
+-r:Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll
+-r:Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll
+-r:Library/ScriptAssemblies/Unity.TextMeshPro.dll
 -r:D:/Programs/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll
 -r:D:/Programs/Unity/Editor/Data/UnityExtensions/Unity/Timeline/RuntimeEditor/UnityEngine.Timeline.dll
 -r:D:/Programs/Unity/Editor/Data/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll
@@ -209,6 +209,7 @@ Assets/Scripts/Builders/PlayerShipBuilder.cs
 Assets/Scripts/Builders/ShipsData/BaseShipPiece.cs
 Assets/Scripts/Builders/ShipsData/ShipRoom_01.cs
 Assets/Scripts/Builders/ShipsData/ShipRoom_02.cs
+Assets/Scripts/Builders/WorldBuilder.cs
 Assets/Scripts/Managers/CameraManager.cs
 Assets/Scripts/Managers/CombatManager.cs
 Assets/Scripts/Managers/GameManager.cs

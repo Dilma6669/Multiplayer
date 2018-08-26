@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
 
-public class LocationManager : NetworkBehaviour {
+public class LocationManager : MonoBehaviour {
 
     GameManager _gameManager;
 
+    WorldBuilder _worldBuilder;
 	GridBuilder _gridBuilder;
 	MapPieceBuilder _mapPieceBuilder;
     ConnectorPieceBuilder _connectorPieceBuilder;
@@ -25,6 +27,8 @@ public class LocationManager : NetworkBehaviour {
         if (_gameManager == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
 
 
+        _worldBuilder = GetComponentInChildren<WorldBuilder>();
+        if (_worldBuilder == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
 
         _gridBuilder = GetComponentInChildren<GridBuilder> ();
 		if(_gridBuilder == null){Debug.LogError ("OOPSALA we have an ERROR!");}
@@ -50,20 +54,73 @@ public class LocationManager : NetworkBehaviour {
 
 	public void BuildMapForClient () {
 
-		_gridBuilder.InitialiseGridManager ();
-		_gridBuilder.StartGridBuilding();
-		_LocationLookup = _gridBuilder.GetGridLocations ();
+        StartCoroutine(BuildGridEnumerator());
+    }
 
-        List<Vector3> mapPieceNodes = _gridBuilder.GetMapNodes ();
-        _mapPieceBuilder.AttachMapPieceToMapNode (mapPieceNodes);
+    // this is make the game actually start at startup and not wait loading
+    private IEnumerator BuildGridEnumerator()
+    {
+        yield return new WaitForSeconds(1.0f);
 
-        List<Vector3> connectPieceNodes = _gridBuilder.GetConnectNodes();
-        _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectPieceNodes);
+        float buildTime = 0.1f;
 
-        List<Vector3> shipPieceNodes = _gridBuilder.GetShipNodes();
+        _worldBuilder.BuildWorldGrid(buildTime);
+
+        List<Vector3> worldMapNodes = _worldBuilder.GetWorldMapNodes();
+
+
+        // Build the Map Pieces
+        for (int i = 0; i < worldMapNodes.Count; i++)
+        {
+            Vector3 mapNode = worldMapNodes[i];
+
+            // Give us a list of Locations
+            _gridBuilder.BuildLocationGrid(mapNode, buildTime, 0); // 0 = map
+
+            //Debug.Log("_LocationLookup.Count: " + _LocationLookup.Count);
+
+              List<Vector3> mapPieceNodes = _gridBuilder.GetGridNodePositions();
+
+            //  yield return new WaitForSeconds(1.0f);
+
+             _mapPieceBuilder.AttachMapPieceToMapNode(mapPieceNodes, buildTime);
+
+            //yield return new WaitForSeconds(buildTime);
+
+        }
+
+
+
+
+        Dictionary<Vector3, int> _connectPieceNodes = _worldBuilder.GetWorldConnectorNodes();
+
+        Debug.Log("_connectPieceNodes.Count: " + _connectPieceNodes.Count);
+
+        // Build Connector Pieces
+        foreach (KeyValuePair<Vector3, int> node in _connectPieceNodes )
+        {
+            _gridBuilder.BuildLocationGrid(node.Key, buildTime, 1); // 1 = connectors
+
+            List<Vector3> connectorPieceNodes = _gridBuilder.GetGridNodePositions();
+
+            _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectorPieceNodes, node.Value, buildTime);
+
+            //yield return new WaitForSeconds(buildTime);
+        }
+
+
+        _LocationLookup = _gridBuilder.GetGridLocations();
+
+
+        //   List<Vector3> connectPieceNodes = _gridBuilder.GetConnectNodes();
+        //  _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectPieceNodes);
+
+        //  List<Vector3> shipPieceNodes = _gridBuilder.GetShipNodes();
         //_playerShipBuilder.AttachShipPieceToMapNode (shipPieceNodes);
 
         //	SetCubeNeighbours ();
+
+        yield return null;
     }
 
 

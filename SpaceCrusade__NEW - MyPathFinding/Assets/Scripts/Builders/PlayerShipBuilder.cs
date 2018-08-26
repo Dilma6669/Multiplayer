@@ -98,7 +98,7 @@ public class PlayerShipBuilder : MonoBehaviour {
 
                     for (int r = 0; r < rotations; r++)
                     {
-                        floor = TransposeArray(floor, _mapSettings.sizeOfMapPieces - 1);
+                        floor = TransposeArray(floor, _mapSettings.sizeOfMapPiecesXZ - 1);
                     }
 
                     for (int z = 0; z < floor.GetLength(0); z++)

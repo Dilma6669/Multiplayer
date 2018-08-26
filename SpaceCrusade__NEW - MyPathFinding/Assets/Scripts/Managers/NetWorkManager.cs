@@ -7,8 +7,7 @@ public class NetWorkManager : NetworkManager {
 
 	public SyncedVars _syncedVars;
 
-    // Need the Awake() function for HUD
-     void Awake() {
+    void Awake() {
          Debug.Log("NETWORKMANAGER: Awake");
 
         _syncedVars = GetComponentInChildren<SyncedVars>();

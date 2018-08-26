@@ -37,9 +37,9 @@ public class CameraAgent : NetworkBehaviour {
 	private float targetMaxVerticalAngle;                              // Custom camera max vertical clamp angle. 
 
 	// Layer INfo
-	public int _minLayer = 0;
-	public int _maxLayer = -1;
-	public int _currLayer = -1;
+	public int _minLayer;
+    public int _maxLayer;
+    public int _currLayer;
 
 	void Awake()
 	{
@@ -99,7 +99,6 @@ public class CameraAgent : NetworkBehaviour {
 
 	public void SetUpCameraAndLayers(int playerID) {
 
-		//_camera = GetComponent<Camera> ();
 		_camera.enabled = true;
 	
 		KeyValuePair<Vector3, Vector3> camStartPos = _cameraManager.GetCameraStartPosition (playerID);
@@ -107,9 +106,8 @@ public class CameraAgent : NetworkBehaviour {
 		Vector3 camPos = camStartPos.Key;
 		Quaternion camRot = Quaternion.Euler (camStartPos.Value);
 
-
-		_maxLayer = _cameraManager.maxLayer;
-		_currLayer = _cameraManager.startLayer;
+		_currLayer = _cameraManager.LayerStart;
+        _maxLayer = _cameraManager.LayerMax;
 
 		// reveal layers up to current
 		for (int i = 0; i <= _currLayer; i++) 
@@ -124,8 +122,8 @@ public class CameraAgent : NetworkBehaviour {
 		angleV = -camRot.eulerAngles.x; 
 
 		// units have already been put into correct layer now need to make camera see layer
-		string layerStr = "Player0" + playerID.ToString () + "Units";
-		_camera.cullingMask |= 1 << LayerMask.NameToLayer (layerStr);
+		//string layerStr = "Player0" + playerID.ToString () + "Units";
+		//_camera.cullingMask |= 1 << LayerMask.NameToLayer (layerStr);
 	}
 		
 

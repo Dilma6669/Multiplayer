@@ -4,17 +4,34 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour {
 
-	// Layer INfo
-    [HideInInspector]
-	public int maxLayer = 5; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
-    [HideInInspector]
-    public int minLayer = 0;
-    [HideInInspector]
-    public int startLayer = 0;
+    // Layer INfo
+    int startLayer = 0;
+    int maxLayer = 5; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
+    int minLayer = 0;
 
-	void Awake() {
+
+    public int LayerStart
+    {
+        get { return startLayer; }
+        set { startLayer = value; }
+    }
+    public int LayerMax
+    {
+        get { return maxLayer; }
+        set { maxLayer = value; }
+    }
+    public int LayerMin
+    {
+        get { return minLayer; }
+        set { minLayer = value; }
+    }
+
+
+    void Awake() {
 
 	}
+
+
 
 
 	public KeyValuePair<Vector3, Vector3> GetCameraStartPosition(int playerID) {
