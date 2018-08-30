@@ -69,13 +69,12 @@ public class GridBuilder : MonoBehaviour {
 
         _GridNodePositions = new List<Vector3>();
 
-
         // these are the bottom left corner axis for EACH map node
         int startGridLocX = (int)worldNode.x;
         int startGridLocY = (int)worldNode.y; // starting height of each new layer, 0, 10, 20. etc
         int startGridLocZ = (int)worldNode.z;
 
-        for (int mapLayer = 0; mapLayer < _mapSettings.numMapPiecesY; mapLayer++)
+        for (int mapLayer = 0; mapLayer < (_mapSettings.numMapPiecesY); mapLayer++)
         {
             //Debug.Log("Vector3 (gridLoc): x: " + startGridLocX + " y: " + startGridLocY + " z: " + startGridLocZ);
 
@@ -84,7 +83,7 @@ public class GridBuilder : MonoBehaviour {
 
             // these are the bottom left corner axis for EACH map node
             startGridLocX = (int)worldNode.x;
-            startGridLocY = (mapLayer + 1) * _mapSettings.sizeOfMapPiecesY + (2 * (mapLayer + 1));
+            startGridLocY += _mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY;
             startGridLocZ = (int)worldNode.z;
 
             //yield return new WaitForSeconds(0);

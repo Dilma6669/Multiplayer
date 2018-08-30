@@ -22,6 +22,7 @@ public class ConnectorPieceBuilder : MonoBehaviour {
 
     int nodeCount = 0;
     int layerCount = -1;
+    int cameraLayerCount = 0;
 
     int[,] pieceRotStore;
 
@@ -106,14 +107,14 @@ public class ConnectorPieceBuilder : MonoBehaviour {
     }
 
 
-    public void AttachConnectorPieceToMapNode(List<Vector3> nodes, int rotation, float waitTime)
+    public void AttachConnectorPieceToMapNode(List<Vector3> nodes, int rotation, int _LayerCount, float waitTime)
     {
         numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
         sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
         sizeOfMapPieces = _mapSettings.sizeOfMapPiecesXZ;
 
         nodeCount = 0;
-        layerCount = -1;
+        layerCount = _LayerCount;
 
         // This is to have same roofs to special floors
         pieceRotStore = new int[sizeSquared, 2];

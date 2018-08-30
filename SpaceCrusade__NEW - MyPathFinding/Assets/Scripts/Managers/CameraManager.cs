@@ -6,7 +6,7 @@ public class CameraManager : MonoBehaviour {
 
     // Layer INfo
     int startLayer = 0;
-    int maxLayer = 5; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
+    int maxLayer = 20; // This needs to change with the amout of y levels, basicly level*2 because of vents layer ontop of layer
     int minLayer = 0;
 
 

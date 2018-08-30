@@ -60,14 +60,20 @@ public class LocationManager : MonoBehaviour {
     // this is make the game actually start at startup and not wait loading
     private IEnumerator BuildGridEnumerator()
     {
-        yield return new WaitForSeconds(1.0f);
-
         float buildTime = 0.1f;
+
+        yield return new WaitForSeconds(buildTime);
 
         _worldBuilder.BuildWorldGrid(buildTime);
 
+        yield return new WaitForSeconds(buildTime);
+
+
+        
         List<Vector3> worldMapNodes = _worldBuilder.GetWorldMapNodes();
 
+        int total = (_mapSettings.worldSizeXZ * _mapSettings.worldSizeXZ) - 1;
+        int layerCount = -1;
 
         // Build the Map Pieces
         for (int i = 0; i < worldMapNodes.Count; i++)
@@ -77,35 +83,66 @@ public class LocationManager : MonoBehaviour {
             // Give us a list of Locations
             _gridBuilder.BuildLocationGrid(mapNode, buildTime, 0); // 0 = map
 
-            //Debug.Log("_LocationLookup.Count: " + _LocationLookup.Count);
+            List<Vector3> mapPieceNodes = _gridBuilder.GetGridNodePositions();
 
-              List<Vector3> mapPieceNodes = _gridBuilder.GetGridNodePositions();
+            _mapPieceBuilder.AttachMapPieceToMapNode(mapPieceNodes, layerCount, buildTime);
 
-            //  yield return new WaitForSeconds(1.0f);
+            if (i % total == 0 && i != 0 && i != (worldMapNodes.Count - 2))
+            {
+                //Debug.Log("fucken count <<<<<: " + layerCount);
+                layerCount += (_mapSettings.numMapPiecesY * 2) + 2; // +2 for connectors going up floor AND roof
+            }
 
-             _mapPieceBuilder.AttachMapPieceToMapNode(mapPieceNodes, buildTime);
-
-            //yield return new WaitForSeconds(buildTime);
-
+            yield return new WaitForSeconds(buildTime);
         }
 
 
 
+        ////
+
+        int rowNoMap = (_mapSettings.worldSizeXZ * _mapSettings.numMapPiecesXZ);
+        int rowYesMap = (_mapSettings.worldSizeXZ + 1);
+
+        int startX = (int)Mathf.Ceil(_mapSettings.numMapPiecesXZ / 2);
+        int spaceBetweenX = _mapSettings.numMapPiecesXZ;
+
+        int startZ = (_mapSettings.worldSizeXZ * _mapSettings.numMapPiecesXZ) + _mapSettings.numMapPiecesXZ;
+        int spaceBetweenZ = _mapSettings.numMapPiecesXZ;
+
+        int connectorPosX = (int)Mathf.Ceil(_mapSettings.numMapPiecesXZ / 2) - 2;
+        int connectorPosY = (int)Mathf.Ceil(_mapSettings.numMapPiecesY / 2) - 2;
+
+        //////
 
         Dictionary<Vector3, int> _connectPieceNodes = _worldBuilder.GetWorldConnectorNodes();
 
-        Debug.Log("_connectPieceNodes.Count: " + _connectPieceNodes.Count);
+        int[] code = new int[] { 0, 4, 12, 24, 40 };
+
+        total = (code[_mapSettings.worldSizeXZ]*_mapSettings.numMapPiecesXZ) - 1;
+
+        layerCount = -1;
 
         // Build Connector Pieces
+        int j = 0;
         foreach (KeyValuePair<Vector3, int> node in _connectPieceNodes )
         {
-            _gridBuilder.BuildLocationGrid(node.Key, buildTime, 1); // 1 = connectors
+          
+           _gridBuilder.BuildLocationGrid(node.Key, buildTime, 1); // 1 = connectors
 
             List<Vector3> connectorPieceNodes = _gridBuilder.GetGridNodePositions();
 
-            _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectorPieceNodes, node.Value, buildTime);
+           _connectorPieceBuilder.AttachConnectorPieceToMapNode (connectorPieceNodes, node.Value, layerCount, buildTime);
 
-            //yield return new WaitForSeconds(buildTime);
+            //Debug.Log("fucken count <<<<<: " + count);
+            if (j % total == 0 && j != 0 && j != (_connectPieceNodes.Count - 2))
+            {
+                layerCount += (_mapSettings.numMapPiecesY * 2) + 2; // +2 for connectors going up floor AND roof
+            }
+
+            j += 1;
+
+            yield return new WaitForSeconds(buildTime);
+
         }
 
 

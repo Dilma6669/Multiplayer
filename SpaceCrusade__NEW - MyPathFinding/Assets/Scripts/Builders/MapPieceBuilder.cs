@@ -20,6 +20,7 @@ public class MapPieceBuilder: MonoBehaviour {
 
     int nodeCount = 0;
     int layerCount = -1;
+    int cameraLayerCount = 0;
 
     int[,] pieceRotStore;
 
@@ -36,27 +37,28 @@ public class MapPieceBuilder: MonoBehaviour {
 	}
 
 
-	public void AttachMapPieceToMapNode(List<Vector3> nodes, float waitTime) {
+	public void AttachMapPieceToMapNode(List<Vector3> nodes, int _LayerCount, float waitTime) {
 
         numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
         sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
         sizeOfMapPieces = _mapSettings.sizeOfMapPiecesXZ;
 
         nodeCount = 0;
-        layerCount = -1;
+        layerCount = _LayerCount;
 
         // This is to have same roofs to special floors
         pieceRotStore = new int[sizeSquared, 2];
 
         for (int j = 0; j < nodes.Count; j++)
         {
+            //Debug.Log("fucken layerCount 2<<<<<: " + layerCount);
             BuildMapsByIEnum(nodes[j], j);
 
             nodeCount += 1;
 
          //yield return new WaitForSeconds(waitTime);
         }
-	}
+    }
 
 
     private void BuildMapsByIEnum(Vector3 nodeLoc, int j)
@@ -77,7 +79,7 @@ public class MapPieceBuilder: MonoBehaviour {
         {
             layerCount += 1;
         }
-
+        //Debug.Log("fucken layerCount 3<<<<<: " + layerCount);
         int mapPieceType = (layerCount % 2 == 0) ? 0 : 1; // floors/Vents
         int mapPiece = Random.Range(1, 4); //Map pieces // 0 = Entrance so dont use here
         int rotation = Random.Range(0, 4);
@@ -156,7 +158,7 @@ public class MapPieceBuilder: MonoBehaviour {
                         mapPiece = ScriptableObject.CreateInstance<MapPiece_Room_01>();
                         break;
                     case 3:
-                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Corridor_02>();
+                        mapPiece = ScriptableObject.CreateInstance<MapPiece_Room_01>();
                         break;
                     default:
                         Debug.LogError("OPSALA SOMETHING WRONG HERE!");
@@ -178,7 +180,7 @@ public class MapPieceBuilder: MonoBehaviour {
                         ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Room_01>();
                         break;
                     case 3:
-                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Corridor_02>();
+                        ventPiece = ScriptableObject.CreateInstance<MapPiece_Vents_Room_01>();
                         break;
                     default:
                         Debug.LogError("OPSALA SOMETHING WRONG HERE!");

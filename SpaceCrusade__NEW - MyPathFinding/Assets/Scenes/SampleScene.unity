@@ -1977,11 +1977,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 697922376aa82e948b9b9c5deb718f60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldSizeXZ: 1
-  worldSizeY: 2
+  worldSizeXZ: 2
+  worldSizeY: 1
   worldType: 0
-  numMapPiecesXZ: 1
-  numMapPiecesY: 1
+  numMapPiecesXZ: 3
+  numMapPiecesY: 3
   sizeOfMapPiecesXZ: 24
   sizeOfMapPiecesY: 6
   sizeOfMapVentsY: 2
@@ -2967,7 +2967,7 @@ MonoBehaviour:
     type: 2}
   _shipNodePrefab: {fileID: 1129343853981196, guid: 89419822c2961e64994ec64ffd6ba495,
     type: 2}
-  _debugGridObjects: 1
+  _debugGridObjects: 0
 --- !u!1 &1899989610
 GameObject:
   m_ObjectHideFlags: 0

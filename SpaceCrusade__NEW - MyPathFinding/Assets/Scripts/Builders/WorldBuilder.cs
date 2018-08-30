@@ -57,11 +57,10 @@ public class WorldBuilder : MonoBehaviour
         sizeOfMapPiecesY = _mapSettings.sizeOfMapPiecesY;
         sizeOfCubes = _mapSettings.sizeOfCubes;
 
+        GetCornerConnectors();
+
         // SPAWN //
         _spawn = Instantiate(_spawnPrefab, transform, false);
-
-
-        GetCornerConnectors();
 
 
         // these are the bottom left corner axis for EACH map node
@@ -79,7 +78,7 @@ public class WorldBuilder : MonoBehaviour
             startGridLocY += _mapSettings.numMapPiecesY * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY) + 10;
             startGridLocZ = 0;
 
-           // yield return new WaitForSeconds(waitTime);
+            //yield return new WaitForSeconds(waitTime);
         }
 
         //Debug.Log("connectorCount: " + connectorCount);
@@ -218,26 +217,30 @@ public class WorldBuilder : MonoBehaviour
 
     private void GetCornerConnectors()
     {
-
-        int total = (((worldSizeXZ * worldSizeXZ) + 1) * ((worldSizeXZ * worldSizeXZ) + 1)) - ((worldSizeXZ * worldSizeXZ) + 1);
+        _corners = new List<int>();
 
         int jumpRow = numMapPiecesXZ * worldSizeXZ;
         int jumpCol = numMapPiecesXZ + 1;
 
-        int count = 0;
+        int cornerCount = 0;
 
-        for (int i = 0; i < (worldSizeXZ + 1); i++)
+        for (int y = 0; y < (worldSizeY); y++)
         {
-            for (int j = 0; j < (worldSizeXZ + 1); j++)
+            for (int z = 0; z < (worldSizeXZ + 1); z++)
             {
-                _corners.Add(count);
-                //Debug.Log("count: " + count);
-
-                count += jumpCol;
+                for (int x = 0; x < (worldSizeXZ + 1); x++)
+                {
+                    _corners.Add(cornerCount);
+                    cornerCount += jumpCol;
+                }
+                cornerCount += jumpRow;
             }
-            count += jumpRow;
+            cornerCount -= jumpCol;
+            cornerCount -= jumpRow;
+            cornerCount++;
         }
     }
+
 
     private bool RemoveCornerConnectors()
     {
