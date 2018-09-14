@@ -36,6 +36,7 @@ public class PlayerShipBuilder : MonoBehaviour {
 
     private IEnumerator BuildShipPiecesByIEnum(List<Vector3> nodes, float waitTime)
     {
+        /*
         Vector3 GridLoc;
 
         List<int[,]> layers = new List<int[,]>();
@@ -127,11 +128,14 @@ public class PlayerShipBuilder : MonoBehaviour {
                 }
             }
             nodeCount += 1;
+            */
 
             yield return new WaitForSeconds(waitTime);
+            /*
         }
 
         //_gameManager.MapsFinishedLoading ();
+        */
     }
 
     // Get map by type and piece

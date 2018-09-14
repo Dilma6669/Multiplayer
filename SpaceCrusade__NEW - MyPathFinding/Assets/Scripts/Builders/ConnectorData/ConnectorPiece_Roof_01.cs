@@ -1,4 +1,4 @@
-﻿public class ConnectorPiece_Roof_01 : BaseConnectorPiece
+﻿public class ConnectorPiece_Roof_01 : BaseMapPiece
 {
     void Awake()
     {

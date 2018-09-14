@@ -14,15 +14,10 @@ public class MapPieceBuilder: MonoBehaviour {
 
 	private bool loadVents = false;
 
-    int numMapPiecesXZ;
-    int sizeSquared;
-    int sizeOfMapPieces;
+    private int worldNodeSize = 0;
+    private int sizeSquared = 0;
 
-    int nodeCount = 0;
     int layerCount = -1;
-    int cameraLayerCount = 0;
-
-    int[,] pieceRotStore;
 
     void Awake() {
 
@@ -36,95 +31,82 @@ public class MapPieceBuilder: MonoBehaviour {
 		if(_mapSettings == null){Debug.LogError ("OOPSALA we have an ERROR!");}
 	}
 
+    public void AttachMapPieceToMapNode(List<Vector3Int> nodes, int _LayerCount, int _worldNodeSize, int _mapType = -1, int _rotation = -1)
+    {
 
-	public void AttachMapPieceToMapNode(List<Vector3> nodes, int _LayerCount, float waitTime) {
+        worldNodeSize = _worldNodeSize;
+        sizeSquared = (worldNodeSize * worldNodeSize);
 
-        numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
-        sizeSquared = numMapPiecesXZ * numMapPiecesXZ;
-        sizeOfMapPieces = _mapSettings.sizeOfMapPiecesXZ;
-
-        nodeCount = 0;
         layerCount = _LayerCount;
-
-        // This is to have same roofs to special floors
-        pieceRotStore = new int[sizeSquared, 2];
 
         for (int j = 0; j < nodes.Count; j++)
         {
             //Debug.Log("fucken layerCount 2<<<<<: " + layerCount);
-            BuildMapsByIEnum(nodes[j], j);
+            BuildMapsByIEnum(nodes[j], j, _mapType, _rotation);
 
-            nodeCount += 1;
-
-         //yield return new WaitForSeconds(waitTime);
+            layerCount += 1;
         }
     }
 
 
-    private void BuildMapsByIEnum(Vector3 nodeLoc, int j)
+    private void BuildMapsByIEnum(Vector3 nodeLoc, int j, int _mapType = -1, int _rotation = -1)
     {
-        int posX = (int)nodeLoc.x;
-        int posY = (int)nodeLoc.y;
-        int posZ = (int)nodeLoc.z;
+        int startGridLocX = (int)nodeLoc.x - (_mapSettings.sizeOfMapPiecesXZ / 2);
+        int startGridLocY = (int)nodeLoc.y;
+        int startGridLocZ = (int)nodeLoc.z - (_mapSettings.sizeOfMapPiecesXZ / 2);
 
         Vector3 GridLoc;
 
         List<int[,]> layers = new List<int[,]>();
         int[,] floor;
 
-        int modulusResult = nodeCount % sizeSquared;
 
-        // clever way to figure out each increase in Layer
-        if (modulusResult == 0)
+        bool floorORRoof = (layerCount % 2 == 0) ? true : false; // floors/Vents
+        int mapPieceType;
+
+        if (floorORRoof) // Floor
         {
-            layerCount += 1;
+            mapPieceType = _mapType;
         }
-        //Debug.Log("fucken layerCount 3<<<<<: " + layerCount);
-        int mapPieceType = (layerCount % 2 == 0) ? 0 : 1; // floors/Vents
+        else // Roof
+        {
+            mapPieceType = _mapType + 1;
+        }
+
         int mapPiece = Random.Range(1, 4); //Map pieces // 0 = Entrance so dont use here
-        int rotation = Random.Range(0, 4);
-
-        // If floor rememeber settings to apply to vents (NOTE: this could be used to make some pieces not deterministic)
-        if (mapPieceType == 0)
-        {
-            pieceRotStore[j % sizeSquared, 0] = mapPiece;
-            pieceRotStore[j % sizeSquared, 1] = rotation;
-        }
-        else
-        {
-            mapPiece = pieceRotStore[j % sizeSquared, 0];
-            rotation = pieceRotStore[j % sizeSquared, 1];
-        } 
+        int rotation = (_rotation == -1) ? Random.Range(0, 4) : _rotation;
         
+        if(rotation == 4)
+        {
+            mapPiece = 0; //ConnectorPiece UP not sure if going to work
+        }
 
         layers = GetMapPiece(mapPieceType, mapPiece);
         int rotations = rotation;
 
-        int objectsCountX = posX;
-        int objectsCountY = posY;
-        int objectsCountZ = posZ;
+        int objectsCountX = startGridLocX;
+        int objectsCountY = startGridLocY;
+        int objectsCountZ = startGridLocZ;
 
         for (int y = 0; y < layers.Count; y++)
         {
 
-            objectsCountX = posX;
-            objectsCountZ = posZ;
+            objectsCountX = startGridLocX;
+            objectsCountZ = startGridLocZ;
 
             floor = layers[y];
 
             for (int r = 0; r < rotations; r++)
             {
-                floor = TransposeArray(floor, sizeOfMapPieces - 1);
+                floor = TransposeArray(floor, _mapSettings.sizeOfMapPiecesXZ - 1);
             }
 
             for (int z = 0; z < floor.GetLength(0); z++)
             {
-
-                objectsCountX = posX;
+                objectsCountX = startGridLocX;
 
                 for (int x = 0; x < floor.GetLength(1); x++)
                 {
-
                     int cubeType = floor[z, x];
                     GridLoc = new Vector3(objectsCountX, objectsCountY, objectsCountZ);
 
@@ -186,8 +168,51 @@ public class MapPieceBuilder: MonoBehaviour {
                         Debug.LogError("OPSALA SOMETHING WRONG HERE!");
                         break;
                 }
-			return ventPiece.floors;
+                return ventPiece.floors;
 
+         case 2:
+                BaseMapPiece connectFloor = null;
+                switch (map)
+                {
+                    case 0:
+                        connectFloor = ScriptableObject.CreateInstance<MapPiece_Corridor_Up_01>();
+                        break;
+                    case 1:
+                        connectFloor = ScriptableObject.CreateInstance<ConnectorPiece_01>();
+                        break;
+                    case 2:
+                        connectFloor = ScriptableObject.CreateInstance<ConnectorPiece_01>();
+                        break;
+                    case 3:
+                        connectFloor = ScriptableObject.CreateInstance<ConnectorPiece_01>();
+                        break;
+                    default:
+                        Debug.LogError("OPSALA SOMETHING WRONG HERE! map: " + map);
+                        break;
+                }
+                return connectFloor.floors;
+
+           case 3:
+                BaseMapPiece connectRoof = null;
+                switch (map)
+                {
+                    case 0:
+                        connectRoof = ScriptableObject.CreateInstance<MapPiece_Vents_Up_01>();
+                        break;
+                    case 1:
+                        connectRoof = ScriptableObject.CreateInstance<ConnectorPiece_Roof_01>();
+                        break;
+                    case 2:
+                        connectRoof = ScriptableObject.CreateInstance<ConnectorPiece_Roof_01>();
+                        break;
+                    case 3:
+                        connectRoof = ScriptableObject.CreateInstance<ConnectorPiece_Roof_01>();
+                        break;
+                    default:
+                        Debug.LogError("OPSALA SOMETHING WRONG HERE! map: " + map);
+                        break;
+                }
+                return connectRoof.floors;
 		default:
 			Debug.LogError ("OPSALA SOMETHING WRONG HERE!");
 			return null;

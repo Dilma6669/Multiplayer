@@ -1,5 +1,5 @@
-﻿public class ConnectorPiece_01 : BaseConnectorPiece {
-
+﻿public class ConnectorPiece_01 : BaseMapPiece
+{
     void Awake()
     {
 

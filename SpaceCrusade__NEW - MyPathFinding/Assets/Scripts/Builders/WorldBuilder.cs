@@ -1,260 +1,526 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class WorldBuilder : MonoBehaviour
 {
-
     MapSettings _mapSettings;
+    NodeBuilder _nodeBuilder;
 
-    public GameObject _spawnPrefab; // object that runs around world space creating the locations
+    private List<Vector3Int> worldVects;
+    private Dictionary<List<Vector3Int>, int> connectorVectsAndRotations;
+    private List<Vector3Int> outerVects;
+    private List<Vector3Int> dockingVects;
 
-    public GameObject _worldMapNodePrefab; // object that shows Map nodes
-    public GameObject _worldConnectorNodePrefab; // object that shows Map nodes
+    private List<WorldNode> worldNodes;
+    private Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes;
+    private List<MapNode> connectorNodes;
+    private List<MapNode> outerNodes;
+    private List<MapNode> dockingNodes;
 
-    private GameObject _spawn;
 
-    private List<Vector3> _worldMapNodes = new List<Vector3>();
-    private Dictionary<Vector3, int> _worldConnectorNodes = new Dictionary< Vector3, int>();
+    private int lowestYpos = 10000;
+    private int highestYpos = 0;
 
-    int worldSizeXZ;
-    int worldSizeY;
-    int numMapPiecesXZ;
-    int numMapPiecesY;
-    int sizeOfMapConnectorsXYZ;
-    int sizeOfMapPiecesXZ;
-    int sizeOfMapPiecesY;
-    int sizeOfCubes;
-
-    int connectorCount = 0;
-    List<int> _corners = new List<int>();
+    Dictionary<Vector3, int[]> NEW_WORLD_GRID = new Dictionary<Vector3, int[]>();
 
     void Awake()
     {
         _mapSettings = transform.parent.GetComponent<MapSettings>();
         if (_mapSettings == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
+
+        _nodeBuilder = transform.parent.GetComponentInChildren<NodeBuilder>();
+        if (_nodeBuilder == null) { Debug.LogError("OOPSALA we have an ERROR!"); }
     }
 
 
-    public List<Vector3> GetWorldMapNodes()
+    public List<WorldNode> GetWorldNodes() { return worldNodes; }
+    public Dictionary<WorldNode, List<MapNode>> GetWorldAndWrapperNodes() { return worldNodeAndWrapperNodes; }
+    public List<MapNode> GetConnectorNodesAndRotations() { return connectorNodes; }
+    public List<MapNode> GetOuterNodes() { return outerNodes; }
+    public List<MapNode> GetDockingNodes() { return dockingNodes; }
+
+
+
+    public void BuildWorldNodes(float waitTime)
     {
-        return _worldMapNodes;
+        List<List<Vector3Int>> container = GetWorld_Outer_DockingVects();
+        worldVects = container[0];
+        outerVects = container[1];
+        dockingVects = container[2];
+        outerNodes = CreateOuterNodes(outerVects);
+
+        worldNodes = CreateWorldNodes(worldVects);
+        worldNodeAndWrapperNodes = CreateMapNodes(worldNodes);
+
+        connectorVectsAndRotations = GetConnectorVects(worldNodes);
+        connectorNodes = CreateConnectorNodes(connectorVectsAndRotations);
+
+        dockingNodes = CreateDockingNodes(dockingVects);
+
     }
 
-    public Dictionary<Vector3, int> GetWorldConnectorNodes()
+    ////////////////////////////////////////////
+    // Get the Vects //////////////////////////
+    ////////////////////////////////////////////
+
+
+    // Get World Outer Docking Vects ////////////////////////////////////////////
+    private List<List<Vector3Int>> GetWorld_Outer_DockingVects()
     {
-        return _worldConnectorNodes;
-    }
+        List<List<Vector3Int>> container = new List<List<Vector3Int>>();
 
-    public void BuildWorldGrid(float waitTime)
-    {
-        worldSizeXZ = _mapSettings.worldSizeXZ;
-        worldSizeY = _mapSettings.worldSizeY;
-        numMapPiecesXZ = _mapSettings.numMapPiecesXZ;
-        numMapPiecesY = _mapSettings.numMapPiecesY;
-        sizeOfMapConnectorsXYZ = _mapSettings.sizeOfMapConnectorsXYZ;
-        sizeOfMapPiecesXZ = _mapSettings.sizeOfMapPiecesXZ;
-        sizeOfMapPiecesY = _mapSettings.sizeOfMapPiecesY;
-        sizeOfCubes = _mapSettings.sizeOfCubes;
+        List<Vector3Int> worldVects = new List<Vector3Int>();
+        List<Vector3Int> outerVects = new List<Vector3Int>();
+        List<Vector3Int> dockingVects = new List<Vector3Int>();
 
-        GetCornerConnectors();
+        int countY = _mapSettings.worldPadding; // First node position
+        int countZ = _mapSettings.worldPadding;
+        int countX = _mapSettings.worldPadding;
 
-        // SPAWN //
-        _spawn = Instantiate(_spawnPrefab, transform, false);
+        int nodeDistanceXZ = _mapSettings.worldNodeDistanceXZ + 1; // + 1 cause distance is only space IN-between nodes
+        int nodeDistanceY = _mapSettings.worldNodeDistanceY + 1;
 
+        int worldSizeY = _mapSettings.worldSizeY;
+        int worldSizeZ = _mapSettings.worldSizeZ + 2; // +2 for Outer/Ship Zones
+        int worldSizeX = _mapSettings.worldSizeX + 2; // +2 for Outer/Ship Zones
 
-        // these are the bottom left corner axis for EACH map node
-        int startGridLocX = 0;
-        int startGridLocY = 0; // starting height of each new layer, 0, 10, 20. etc
-        int startGridLocZ = 0;
+        //int centralOuterNodeX = 2;
+        int dockingNodeX = 3;
 
-        // Load each Y layer of grids in a loop, not nessacary but just did it this way for some reason
-        for (int worldLayer = 0; worldLayer < _mapSettings.worldSizeY; worldLayer++)
+        for (int y = 0; y < worldSizeY; y++)
         {
-            // build map Layer grid locations
-            BuildWorldLocations(startGridLocX, startGridLocY, startGridLocZ, 0.001f);
-
-            startGridLocX = 0;
-            startGridLocY += _mapSettings.numMapPiecesY * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY) + 10;
-            startGridLocZ = 0;
-
-            //yield return new WaitForSeconds(waitTime);
-        }
-
-        //Debug.Log("connectorCount: " + connectorCount);
-    }
-
-
-    private void BuildWorldLocations(int startX, int startY, int startZ, float waitTime)
-    {
-        int gridLocX = startX;
-        int gridLocY = startY;
-        int gridLocZ = startZ;
-
-        int mapPadding = 2; // 2 = around whole map not just bottom and left side
-
-        int finishX = worldSizeXZ * (numMapPiecesXZ + (sizeOfMapConnectorsXYZ * mapPadding)) - (worldSizeXZ - 1);
-        int finishZ = worldSizeXZ * (numMapPiecesXZ + (sizeOfMapConnectorsXYZ * mapPadding)) - (worldSizeXZ - 1);
-        //int finishY = worldSizeY * (numMapPiecesY);
-
-        float spawnPosX = startX;
-        float spawnPosZ = startZ;
-        float spawnPosY = startY;
-
-        int nodeCount = 0;
-
-        for (int z = startZ; z < finishZ; z++)
-        {
-
-            spawnPosX = startX;
-            _spawn.transform.localPosition = new Vector3(spawnPosX, spawnPosY, spawnPosZ);
-
-            gridLocX = startX;
-
-            for (int x = startX; x < finishX; x++)
+            for (int z = 0; z < worldSizeZ; z++)
             {
-
-                // Create location positions
-                ///////////////////////////////
-                // put vector location, eg, grid Location 0,0,0 and World Location 35, 0, 40 value pairs into hashmap for easy lookup
-                Vector3 gridLoc = new Vector3(gridLocX, gridLocY, gridLocZ);
-
-                // node objects are spawned at bottom corner each map piece
-                MakeWorldNodeObject(gridLocX, gridLocY, gridLocZ, startX, startY, startZ, finishX, finishZ, nodeCount);
-
-                spawnPosX += sizeOfMapPiecesXZ;
-                _spawn.transform.localPosition = new Vector3(spawnPosX, spawnPosY, spawnPosZ);
-                gridLocX += sizeOfMapPiecesXZ;
-                nodeCount += 1;
-
-            }
-            spawnPosZ += sizeOfMapPiecesXZ;
-            gridLocZ += sizeOfMapPiecesXZ;
-        }
-            // NEED TO SORT OUT THE CONNETIONS ONTOP OF THE WORLD LAYER HERE
-            // int height = (_mapSettings.numMapPiecesY * _mapSettings.sizeOfMapPiecesY) + (_mapSettings.numMapPiecesY * _mapSettings.sizeOfMapVentsY);
-            // gridLocY += height;
-            // spawnPosY += height;
-            //MakeWorldNodeObject(gridLocX, gridLocY, gridLocZ, startY, finishX, finishZ);
-
-    }
-
-
-    // node objects are spawned at bottom corner each map piece
-    private void MakeWorldNodeObject(int gridLocX, int gridLocY, int gridLocZ, int startX, int startY, int startZ, int finishX, int finishZ, int nodeCount)
-    {
-        //////////////////////////////////////////
-
-        int mapNodeOffset = 2; // change this to move Map node
-        int mapNodePos = worldSizeXZ * (numMapPiecesXZ + sizeOfMapConnectorsXYZ) + mapNodeOffset; //
-
-        int multiplier = ((numMapPiecesXZ + sizeOfMapConnectorsXYZ) * sizeOfMapPiecesXZ);
-
-        // Map Nodes
-        if (nodeCount == mapNodePos) // finds first node and then places all other nodes from start one here
-        {
-            int x = gridLocX;
-            int y = gridLocY;
-            int z = gridLocZ;
-
-            for (int i = 0; i < worldSizeXZ; i++)
-            {
-                for (int j = 0; j < worldSizeXZ; j++)
+                for (int x = 0; x < worldSizeX; x++)
                 {
+                    //Debug.Log("Vector3 (gridLoc): x: " + x + " y: " + y + " z: " + z);
+                    int resultY = countY * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY);
+                    int resultZ = countZ * _mapSettings.sizeOfMapPiecesXZ;
+                    int resultX = countX * _mapSettings.sizeOfMapPiecesXZ;
 
+
+                    if ((x == 0) || (z == 0) || (x == (worldSizeX - 1)) || (z == (worldSizeZ - 1)))
+                    {
+                        /*// Get outer Zone central node
+                        if (z == (worldSizeX - 2) && x == centralOuterNodeX && y == 0)
+                        {
+                            outerVects.Add(new Vector3Int(resultX, resultY, resultZ));
+                        } */
+
+                        // Get docking lines
+                        if (z == 0 && x == dockingNodeX)
+                       {
+                           dockingVects.Add(new Vector3Int(resultX, resultY, resultZ));
+                       }
+                   }
+                   else // All central map nodes
+                   {
+                       worldVects.Add(new Vector3Int(resultX, resultY, resultZ));
+                   }
+                   countX += nodeDistanceXZ;
+               }
+               countX = _mapSettings.worldPadding;
+               countZ += nodeDistanceXZ;
+           }
+           countX = _mapSettings.worldPadding;
+           countZ = _mapSettings.worldPadding;
+           countY += nodeDistanceY;
+       }
+
+       container.Add(worldVects);
+       container.Add(outerVects);
+       container.Add(dockingVects);
+
+       return container;
+   }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Get Map Vects ////////////////////////////////////////////////////////////
+    private List<Vector3Int> GetMapVects(WorldNode nodeScript)
+    {
+        Vector3Int loc = nodeScript.nodeLocation;
+        int size = nodeScript.nodeSize;
+
+        List<Vector3Int> nodeVects = new List<Vector3Int>();
+
+        int multiplierXZ = (int)Mathf.Floor(size / 2) * _mapSettings.sizeOfMapPiecesXZ;
+        int multiplierY = (int)Mathf.Floor(size / 2) * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY);
+
+        int countY = loc.y - multiplierY;
+        int countZ = loc.z - multiplierXZ;
+        int countX = loc.x - multiplierXZ;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int z = 0; z < size; z++)
+            {
+                for (int x = 0; x < size; x++)
+                {
                     // Debug.Log("Vector3 (gridLoc): x: " + x + " y: " + y + " z: " + z);
-                    Vector3 pos = new Vector3(x, y, z);
-
-                    GameObject nodeObject = Instantiate(_worldMapNodePrefab, _spawn.transform, false);
-                    nodeObject.transform.position = pos;
-                    nodeObject.transform.SetParent(this.gameObject.transform);
-                    nodeObject.transform.localScale = new Vector3(sizeOfCubes, sizeOfCubes, sizeOfCubes);
-                    _worldMapNodes.Add(pos);
-
-                    x += multiplier;
+                    nodeVects.Add(new Vector3Int(countX, countY, countZ));
+                    countX += _mapSettings.sizeOfMapPiecesXZ;
                 }
-                x = gridLocX;
-                z += multiplier;
+                countX = loc.x - multiplierXZ;
+                countZ += _mapSettings.sizeOfMapPiecesXZ;
             }
-
+            countX = loc.x - multiplierXZ;
+            countZ = loc.z - multiplierXZ;
+            countY += (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY);
         }
 
-        // connector Nodes
-        else if (gridLocX % multiplier == 0)
-        {
-            Vector3 pos = new Vector3(gridLocX, gridLocY, gridLocZ);
-
-            if (!_worldConnectorNodes.ContainsKey(pos))
-            {
-                if (RemoveCornerConnectors())
-                {
-                    GameObject nodeObject = Instantiate(_worldConnectorNodePrefab, _spawn.transform, false);
-                    nodeObject.transform.position = pos;
-                    nodeObject.transform.SetParent(this.gameObject.transform);
-                    nodeObject.transform.localScale = new Vector3(sizeOfCubes, sizeOfCubes, sizeOfCubes);
-                    _worldConnectorNodes.Add(pos, 1);
-                }
-            }
-        }
-        else if (gridLocZ % multiplier == 0)
-        {
-            Vector3 pos = new Vector3(gridLocX, gridLocY, gridLocZ);
-
-            if (!_worldConnectorNodes.ContainsKey(pos))
-            {
-                if (RemoveCornerConnectors())
-                {
-                    GameObject nodeObject = Instantiate(_worldConnectorNodePrefab, _spawn.transform, false);
-                    nodeObject.transform.position = pos;
-                    nodeObject.transform.SetParent(this.gameObject.transform);
-                    nodeObject.transform.localScale = new Vector3(sizeOfCubes, sizeOfCubes, sizeOfCubes);
-                    _worldConnectorNodes.Add(pos, 0);
-                }
-            }
-        }
-        /////////////////////////////////////////////
+        return nodeVects;
     }
+    ////////////////////////////////////////////////////////////////////////////
 
-    private void GetCornerConnectors()
+    // Get Connector Vects /////////////////////////////////////////////////////
+    private Dictionary<List<Vector3Int>, int> GetConnectorVects(List<WorldNode> worldNodes)
     {
-        _corners = new List<int>();
+        Dictionary<List<Vector3Int>, int> connectorVectsAndRotations = new Dictionary<List<Vector3Int>, int>();
 
-        int jumpRow = numMapPiecesXZ * worldSizeXZ;
-        int jumpCol = numMapPiecesXZ + 1;
-
-        int cornerCount = 0;
-
-        for (int y = 0; y < (worldSizeY); y++)
+        foreach (WorldNode worldNode in worldNodes)
         {
-            for (int z = 0; z < (worldSizeXZ + 1); z++)
+            int nodeCount = worldNode.worldNodeCount;
+            int[] neighbours = worldNode.neighbours;
+
+            if (!worldNode.connected && worldNode.nodeSize > 0)
             {
-                for (int x = 0; x < (worldSizeXZ + 1); x++)
+                foreach (int neigh in neighbours)
                 {
-                    _corners.Add(cornerCount);
-                    cornerCount += jumpCol;
+                    if (neigh > 0 && neigh < (_mapSettings.worldSizeX * _mapSettings.worldSizeZ) * _mapSettings.worldSizeY)
+                    {
+                        WorldNode neighbour = worldNodes[neigh];
+                        if (!neighbour.connected && neighbour.nodeSize > 0)
+                        {
+                            //Debug.Log("Vector3 worldNode: " + worldNode.nodeLocation);
+                            KeyValuePair<List<Vector3Int>, int> vectorAndRot = GetVectsAndRotation(worldNode, neighbour, neigh);
+
+                            connectorVectsAndRotations.Add(vectorAndRot.Key, vectorAndRot.Value);
+                        }
+                    }
                 }
-                cornerCount += jumpRow;
+                worldNode.connected = true;
             }
-            cornerCount -= jumpCol;
-            cornerCount -= jumpRow;
-            cornerCount++;
         }
+        return connectorVectsAndRotations;
     }
-
-
-    private bool RemoveCornerConnectors()
+    public KeyValuePair<List<Vector3Int>, int> GetVectsAndRotation(WorldNode node0, WorldNode node1, int neighCount)
     {
-        foreach(int i in _corners)
+        List<Vector3Int> connectionVects = new List<Vector3Int>();
+
+        bool initialSmaller = false;
+        WorldNode smallerNode = null;
+        WorldNode biggerNode = null;
+
+        int widthOfConnects = 0;
+        int lengthOfConnects = 0;
+
+        if (node0.nodeSize == node1.nodeSize)
         {
-            if(connectorCount == i)
-            {
-                //Debug.Log("not letting i: " + i);
-                connectorCount++;
-                return false;
-            }
+            smallerNode = node1;
+            biggerNode = node0;
+        }
+        else if (node0.nodeSize < node1.nodeSize)
+        {
+            initialSmaller = true;
+            smallerNode = node0;
+            biggerNode = node1;
+        }
+        else if (node0.nodeSize > node1.nodeSize)
+        {
+            initialSmaller = false;
+            smallerNode = node1;
+            biggerNode = node0;
+        }
+        else
+        {
+            Debug.LogError("Something went wrong here");
         }
 
-        connectorCount++;
-        return true;
+        int smallLength = (int)Mathf.Floor(smallerNode.nodeSize / 2); // 0
+        int bigLength = (int)Mathf.Floor(biggerNode.nodeSize / 2); // 1
+
+        widthOfConnects = smallerNode.nodeSize;
+        lengthOfConnects = _mapSettings.worldNodeDistanceXZ - (bigLength + smallLength); // 3
+
+        int rotation = -1;
+
+        int distance = (initialSmaller) ? smallLength : bigLength;
+        distance += 1;
+
+        for (int i = 0; i < lengthOfConnects; i++)
+        {
+            Vector3Int finalVect;
+            Vector3Int direction; // this is to seperate what axis x,y,z neighbour is
+
+            if (initialSmaller)
+            {
+                direction = (biggerNode.nodeLocation - smallerNode.nodeLocation);
+            }
+            else
+            {
+                direction = (smallerNode.nodeLocation - biggerNode.nodeLocation);
+            }
+
+            finalVect = node0.nodeLocation;
+
+            if (direction.x != 0 && direction.y == 0 && direction.z == 0)
+            {
+                if (direction.x > 0)
+                {
+                    rotation = 1;
+                    finalVect = new Vector3Int(finalVect.x + (distance * _mapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
+                }
+                else if (direction.x < 0)
+                {
+                    rotation = 3;
+                    finalVect = new Vector3Int(finalVect.x - (distance * _mapSettings.sizeOfMapPiecesXZ), finalVect.y, finalVect.z);
+                }
+            }
+            else if (direction.x == 0 && direction.y != 0 && direction.z == 0)
+            {
+                if (direction.y > 0)
+                {
+                    rotation = 4;
+                    finalVect = new Vector3Int(finalVect.x, finalVect.y + (distance * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY)), finalVect.z);
+                }
+                else if (direction.y < 0)
+                {
+                    rotation = 4;
+                    finalVect = new Vector3Int(finalVect.x, finalVect.y - (distance * (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY)), finalVect.z);
+                }
+            }
+            else if (direction.x == 0 && direction.y == 0 && direction.z != 0)
+            {
+                if (direction.z > 0)
+                {
+                    rotation = 0;
+                    finalVect = new Vector3Int(finalVect.x, finalVect.y, finalVect.z + (distance * _mapSettings.sizeOfMapPiecesXZ));
+                }
+                else if (direction.z < 0)
+                {
+                    rotation = 2;
+                    finalVect = new Vector3Int(finalVect.x, finalVect.y, finalVect.z - (distance * _mapSettings.sizeOfMapPiecesXZ));
+                }
+            }
+            else
+            {
+                Debug.LogError("SOMETHING WRONG HERE direction: " + direction);
+                Debug.LogFormat("initialSmaller: {0} -node0: {1} -node1: {2}", initialSmaller, node0.nodeLocation, node1.nodeLocation);
+            }
+
+            distance += 1;
+            connectionVects.Add(finalVect);
+        }
+        return new KeyValuePair<List<Vector3Int>, int>(connectionVects, rotation);
     }
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    ////////////////////////////////////////////
+    // Create the Nodes from the Vects ///////
+    ////////////////////////////////////////////
+
+
+    // Create World Nodes ///////////////////////////////////////////////////
+    private List<WorldNode> CreateWorldNodes(List<Vector3Int> nodeVects)
+    {
+        int[,] nodeGrid = new int[_mapSettings.worldSizeX, _mapSettings.worldSizeZ];
+
+        // build inital map Node
+        List<WorldNode> worldNodes = new List<WorldNode>();
+        bool left = true;
+        bool right = false;
+        bool front = false;
+        bool back = true;
+
+        int rowMultipler = _mapSettings.worldSizeX;
+        int colMultiplier = _mapSettings.worldSizeZ;
+
+        int totalMultiplier = _mapSettings.worldSizeX * _mapSettings.worldSizeZ;
+
+        int layer = 1;
+        int count = 1;
+        foreach (Vector3Int vect in nodeVects)
+        {
+            right = (count % rowMultipler == 0) ? true : false;
+            left = (count == 1 || ((count - 1) % rowMultipler == 0)) ? true : false;
+
+            front = ((count + _mapSettings.worldSizeX) > (totalMultiplier * layer) && count <= (totalMultiplier * layer)) ? true : false;
+            back = (count >= ((totalMultiplier + 1) * (layer - 1)) && count <= (totalMultiplier * (layer - 1)) + _mapSettings.worldSizeX) ? true : false;
+
+            int rotation = 0;
+            WorldNode nodeScript = CreateNode<WorldNode>(vect, rotation, NodeTypes.WorldNode);
+            int randSize = _mapSettings.getRandomMapSize;
+            //Debug.LogError("Random.Range(0, sizes.Length): " + Random.Range(0, sizes.Length));
+            nodeScript.nodeSize = randSize;
+            nodeScript.worldNodeCount = (count - 1);
+            nodeScript.neighbours = GetWorldNodeNeighbours((count - 1), left, right, front, back);
+            worldNodes.Add(nodeScript);
+
+            if (count % totalMultiplier == 0)
+            {
+                layer++;
+            }
+            count++;
+        }
+        return worldNodes;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Create Map Nodes ////////////////////////////////////////////////////////
+    private Dictionary<WorldNode, List<MapNode>> CreateMapNodes(List<WorldNode> worldNodes)
+    {
+        // Wrap map Nodes around around Initial
+        Dictionary<WorldNode, List<MapNode>> worldNodeAndWrapperNodes = new Dictionary<WorldNode, List<MapNode>>();
+
+        foreach (WorldNode worldNode in worldNodes)
+        {
+            List<Vector3Int> mapVects = GetMapVects(worldNode);
+            List<MapNode> mapNodes = new List<MapNode>();
+
+            foreach (Vector3Int vect in mapVects)
+            {
+                int rotation = 0;
+                mapNodes.Add(CreateNode<MapNode>(vect, rotation, NodeTypes.MapNode));
+
+                if (vect.y <= lowestYpos) // this is find lowest point to make LayerCounts
+                {
+                    lowestYpos = vect.y;
+                }
+                if (vect.y >= highestYpos) // this is find highest point to make LayerCounts
+                {
+                    highestYpos = vect.y;
+                }
+            }
+            worldNodeAndWrapperNodes.Add(worldNode, mapNodes);
+        }
+
+        // figure out LayerCount (DONT LIKE THIS) basicly have to re-run whats just happened to get count
+        foreach (WorldNode worldNode in worldNodeAndWrapperNodes.Keys)
+        {
+            List<MapNode> wrapperNodes = worldNodeAndWrapperNodes[worldNode];
+            foreach (MapNode nodeScript in wrapperNodes)
+            {
+                nodeScript.nodeLayerCount = GetLayerCountForNodePos(nodeScript.nodeLocation);
+            }
+        }
+        return worldNodeAndWrapperNodes;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Create Connector Nodes ////////////////////////////////////////////////
+    private List<MapNode> CreateConnectorNodes(Dictionary<List<Vector3Int>, int> connectorVects)
+   {
+       List<MapNode> connectorNodes = new List<MapNode>();
+
+        foreach (List<Vector3Int> vectors in connectorVects.Keys)
+        {
+            int rotation = connectorVects[vectors];
+
+            foreach (Vector3Int vect in vectors)
+            {
+                connectorNodes.Add(CreateNode<MapNode>(vect, rotation, NodeTypes.ConnectorNode));
+            }
+        }
+       return connectorNodes;
+   }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Create Outer Nodes /////////////////////////////////////////////////////
+    private List<MapNode> CreateOuterNodes(List<Vector3Int> outerVects)
+    {
+        List<MapNode> outerNodes = new List<MapNode>();
+        foreach (Vector3Int vect in outerVects)
+        {
+            int rotation = 0;
+            outerNodes.Add(CreateNode<MapNode>(vect, rotation, NodeTypes.OuterNode));
+        }
+        return outerNodes;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Create Docking Nodes /////////////////////////////////////////////////////
+    private List<MapNode> CreateDockingNodes(List<Vector3Int> dockingVects)
+    {
+        List<MapNode> dockingNodes = new List<MapNode>();
+        foreach (Vector3Int vect in dockingVects)
+        {
+            int rotation = 0;
+            dockingNodes.Add(CreateNode<MapNode>(vect, rotation, NodeTypes.DockingNode));
+        }
+        return dockingNodes;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+
+
+    ////////////////////////////////////////////
+    // Helper Functions ////////////////////////
+    ////////////////////////////////////////////
+
+
+    // Create Generic Node /////////////////////////////////////////////////////
+    private T CreateNode<T>(Vector3Int vect, int rotation, NodeTypes nodeType) where T : BaseNode
+    {
+        //Debug.Log("Vector3 (gridLoc): x: " + vect.x + " y: " + vect.y + " z: " + vect.z);
+        GameObject node = _nodeBuilder.InstantiateNodeObject(vect, nodeType, this.transform);
+        T nodeScript = node.GetComponent<T>();
+        nodeScript.nodeLocation = vect;
+        nodeScript.nodeRotation = rotation;
+        nodeScript.nodeLayerCount = GetLayerCountForNodePos(vect);
+        return nodeScript;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Get Layer Count for Node Position ////////////////////////////////////////
+    private int GetLayerCountForNodePos(Vector3Int nodePos)
+    {
+        int yPos = nodePos.y;
+        int currHeight = lowestYpos;
+        int mapHeight = (_mapSettings.sizeOfMapPiecesY + _mapSettings.sizeOfMapVentsY);
+        for (int layer = 0; layer < 50; layer += 2) // needs to be 2 coz 2 layers needed each map piece floor and roof
+        {
+            if (yPos == currHeight)
+            {
+                return layer;
+            }
+            currHeight += mapHeight;
+        }
+        return 0;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Get World Node Neighbours ///////////////////////////////////////////////
+    private int[] GetWorldNodeNeighbours(int count, bool left, bool right, bool front, bool back)
+    {
+        int[] neighbours = new int[6];
+
+        neighbours[0] = (left) ? -1 : count - 1;                             //(x - 1, y, z)
+        neighbours[1] = (right) ? -1 : count + 1;                            //(x + 1, y, z)
+        neighbours[2] = (front) ? -1 : count + _mapSettings.worldSizeX;      //(x, y, z + 1)
+        neighbours[3] = (back) ? -1 : count - _mapSettings.worldSizeX;       //(x, y, z - 1)
+        neighbours[4] = count - (_mapSettings.worldSizeX * _mapSettings.worldSizeZ);  //(x, y - 1, z)
+        neighbours[5] = count + (_mapSettings.worldSizeX * _mapSettings.worldSizeZ);  //(x, y + 1, z)
+
+        return neighbours;
+    }
+    ////////////////////////////////////////////////////////////////////////////
+
+
+    /*
+    private bool AddValueToWorldGridLoc(Vector3 loc, int[] values)
+    {
+        if (!NEW_WORLD_GRID.ContainsKey(loc))
+        {
+            NEW_WORLD_GRID[loc] = values;
+            return true;
+        }
+        else
+        {
+            Debug.LogFormat("ISSUE HERE GRID LOCATION ALREADY ASSIGNED!!! Vector: {0}", loc);
+            return false;
+        }
+    }
+    */
+
 }

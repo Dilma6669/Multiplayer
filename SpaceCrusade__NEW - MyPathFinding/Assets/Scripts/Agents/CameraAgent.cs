@@ -14,7 +14,7 @@ public class CameraAgent : NetworkBehaviour {
 	Camera _camera;
 
 	private float mouseRotationSpeed = 10f;                         // Horizontal turn speed.
-	private float keysMovementSpeed = 10f;                           // Vertical turn speed.
+	private float keysMovementSpeed = 0.4f;                           // Vertical turn speed.
 
 	private float zoomMinFOV = 15f;
 	private float zoomMaxFOV = 90f;
@@ -71,6 +71,15 @@ public class CameraAgent : NetworkBehaviour {
 			
 			// Mouse rotation
 			if (Input.GetMouseButton (2)) {
+
+                if(Input.GetKey(KeyCode.LeftShift))
+                {
+                    keysMovementSpeed = 1.0f;
+                }
+                else
+                {
+                    keysMovementSpeed = 0.4f;
+                }
 
 				// mouse look around
 				x = Input.GetAxis ("Mouse X");
